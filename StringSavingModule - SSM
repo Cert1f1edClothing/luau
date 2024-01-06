@@ -1,0 +1,46 @@
+local dss=game:GetService("DataStoreService");
+local dsName=tostring(script);
+local ds=dss:GetDataStore(dsName);
+
+local data={};
+
+local function Loadstring(str)
+	local bool,tbl=pcall(function()
+		return loadstring("return "..str)();
+	end);
+	
+	if not bool then return str end;
+	
+	return tbl;
+end;
+
+function data.dsin(id:string,global:boolean,...:string)
+	if not id then
+		return
+	elseif (...) then
+		data[tostring(id)]="{"..table.concat({...},";").."}";
+	end;
+	
+	if not global then return end;
+	
+	local str:string=data[tostring(id)];
+	
+	while typeof(str)=="string" do
+		local bool=pcall(function()
+			ds:SetAsync(dsName..".__"..id,str);
+		end)
+		
+		if bool then break end;
+	end;
+end;
+
+function data.dsout(id:string,...)
+	local bool,str=pcall(function()
+		return ds:GetAsync(dsName..".__"..tostring(id));
+	end)
+	
+	if bool then return Loadstring(str) or (...) end;
+end;
+
+return data;
+--cert1f1edfailure#0851, Cert1f1edClothing
