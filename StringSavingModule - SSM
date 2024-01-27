@@ -4,42 +4,54 @@ local ds=dss:GetDataStore(dsName);
 
 local data={};
 
-local function Loadstring(str)
-	local bool,tbl=pcall(function()
-		return loadstring("return "..str)();
-	end);
-	
-	if not bool then return str end;
-	
-	return tbl;
+function data.dsin(id:string,...:string)
+	if not (id and (...)) then return end;
+ 
+	data[tostring(id)]=table.concat({...},"; ");
 end;
-
-function data.dsin(id:string,global:boolean,...:string)
-	if not id then
-		return
-	elseif (...) then
-		data[tostring(id)]="{"..table.concat({...},";").."}";
-	end;
 	
-	if not global then return end;
+function data.dsin2(id:string,clear:boolean...:string)
+  if not id then return end;
+ 
+  local str;
+ 
+  if (...) then
+    str=table.concat({...},"; ");
+  else
+    str=data[tostring(id)];
+  end;
+  
+  if typeof(str)~="string" then return end;
+ 
+  local key=dsName..".__"..tostring(id);
 	
-	local str:string=data[tostring(id)];
-	
-	while typeof(str)=="string" do
+	while true do
 		local bool=pcall(function()
-			ds:SetAsync(dsName..".__"..id,str);
-		end)
-		
-		if bool then break end;
+			ds:SetAsync(key,str);
+	  end)
+  
+    if bool then
+      if clear then table.remove(table.find(data,key)) end;
+    
+      return
+    end;
+    
+    task.wait(1);
 	end;
 end;
 
-function data.dsout(id:string,...)
-	local bool,str=pcall(function()
-		return ds:GetAsync(dsName..".__"..tostring(id));
+function data.dsout(id:string)
+  local str=data[tostring(id)];
+ 
+  if typeof(str)=="string" then return string.split(str,"; ") end;
+end;
+
+function data.dsout2(id:string)
+  local bool,str=pcall(function()
+	  return ds:GetAsync(dsName..".__"..tostring(id));
 	end)
-	
-	if bool then return Loadstring(str) or (...) end;
+  
+  if bool and str then return string.split(str,"; ") end;
 end;
 
 return data;
