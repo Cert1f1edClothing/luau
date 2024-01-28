@@ -6,7 +6,7 @@ local data={};
 function data.dsin(id:string,...:string)
 	if not (id and (...)) then return end;
  
-        data[tostring(id)]=table.concat({...},"; ");
+  data[tostring(id)]=table.concat({...},"; ");
 end;
 	
 function data.dsin2(id:string,clear:boolean...:string)
