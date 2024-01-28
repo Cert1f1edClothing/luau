@@ -1,6 +1,5 @@
-local dss=game:GetService("DataStoreService");
 local dsName=tostring(script);
-local ds=dss:GetDataStore(dsName);
+local ds=game:GetService("DataStoreService"):GetDataStore(dsName);
 
 local data={};
 
@@ -22,22 +21,12 @@ function data.dsin2(id:string,clear:boolean...:string)
   end;
   
   if typeof(str)~="string" then return end;
- 
-  local key=dsName..".__"..tostring(id);
-	
-	while true do
-		local bool=pcall(function()
-			ds:SetAsync(key,str);
-	  end)
   
-    if bool then
-      if clear then table.remove(table.find(data,key)) end;
-    
-      return
-    end;
-    
-    task.wait(1);
-	end;
+  local key=dsName..".__"..tostring(id);
+  
+  ds:SetAsync(key,str);
+  
+  if clear then table.remove(table.find(data,key)) end;
 end;
 
 function data.dsout(id:string)
