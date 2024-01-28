@@ -4,7 +4,7 @@ local ds=game:GetService("DataStoreService"):GetDataStore(dsName);
 local data={};
 
 function data.dsin(id:string,...:string)
-	if not (id and (...)) then return end;
+  if not (id and (...)) then return end;
  
   data[tostring(id)]=table.concat({...},"; ");
 end;
@@ -37,8 +37,8 @@ end;
 
 function data.dsout2(id:string)
   local bool,str=pcall(function()
-	  return ds:GetAsync(dsName..".__"..tostring(id));
-	end)
+    return ds:GetAsync(dsName..".__"..tostring(id));
+  end)
   
   if bool and str then return string.split(str,"; ") end;
 end;
