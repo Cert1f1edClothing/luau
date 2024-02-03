@@ -16,9 +16,9 @@ local function mainFunc(t,k,v)
 			return v2;
 		end;
 	elseif args[1]=="global" then
-		if v then
+		if v or v=="input" then
 			ds:SetAsync(id,https:JSONEncode(v or v2));
-		else
+		elseif not v then
 			local success,err=pcall(function()
 				return https:JSONDecode(ds:GetAsync(id));
 			end)
