@@ -1,0 +1,38 @@
+local https=game:GetService("HttpService");
+local ds=game:GetService("DataStoreService"):GetDataStore(tostring(script));
+
+local function mainFunc(t,k,v)
+  local args=string.split(k,"_");
+  local id=args[#args];
+  
+  if not id then return end;
+  
+  local v2=t._L[id];
+  
+  if args[1]=="local" then
+    if v then
+      t._L[id]=v;
+    else
+      return v2;
+  elseif args[1]=="global" then
+    if v then
+      ds:SetAsync(id,https:JSONEncode(v or v2));
+    else
+      local success,err=pcall(function()
+        return https:JSONDecode(ds:GetAsync(id));
+      end)
+      
+      if success then return err end;
+    end;
+  end;
+  
+  if args[2]=="clear" and v2 then table.remove(t._L,id) end;
+end;
+
+local data=setmetatable({["_L"]={}},{
+  __index=mainFunc;
+  __newindex=mainFunc;
+});
+
+return data;
+--cert1f1edfailure#0851, Cert1f1edClothing
