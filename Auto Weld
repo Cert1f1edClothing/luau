@@ -1,0 +1,65 @@
+local chs=game:GetService("ChangeHistoryService");
+local ss=game:GetService("Selection");
+local rs=game:GetService("RunService");
+
+local toolbar=plugin:CreateToolbar("Example Plugin");
+local button=toolbar:CreateButton("Auto Weld","Automatically Weld parts","");
+local cnn:RBXScriptConnection;
+
+local function weld(part: BasePart,...: BasePart)
+	local path=part:GetFullName();
+	
+	for _,v: BasePart in ipairs({...}) do
+		local skip=false;
+		
+		for _,v2: WeldConstraint in ipairs(v:GetChildren()) do
+			if tostring(v2)=="Auto Weld" and v2.Part0==part then
+				skip=true;
+				break
+			end;
+		end;
+		
+		if skip then continue end;
+		
+		local w=Instance.new("WeldConstraint");
+		
+		w.Name="Auto Weld";
+		w.Part0=part;
+		w.Part1=v;
+		w.Parent=v;
+		chs:SetWaypoint("Seperated "..path.." from "..v:GetFullName());
+	end;
+end;
+
+local function disable()
+	cnn:Disconnect();
+	cnn=nil;
+end;
+
+button.Click:Connect(function()
+	warn("Auto Weld: "..tostring(not cnn));
+	
+	if cnn then
+		disable();
+	else
+		cnn=rs.Heartbeat:Connect(function()
+			local selected={};
+
+			for _,v in ipairs(ss:Get()) do
+				if v:IsA("BasePart") then
+					table.insert(selected,v);
+				end;
+			end;
+
+			if 2>#selected then return end;
+
+			weld(unpack(selected));
+		end)
+	end;
+end)
+
+chs.OnUndo:Connect(function(v)
+	warn("Auto Weld: false, "..v);
+	
+	if cnn then disable() end;
+end)
