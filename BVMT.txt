@@ -1,0 +1,187 @@
+type BVMT = {
+	Connected: boolean;
+	CFrame: CFrame | Vector3;
+	Position: Vector3 | CFrame;
+	Orientation: CFrame | Vector3;
+	PositionInstance: BodyPosition;
+	RotationInstance: BodyGyro;
+	Disconnect: (self: BVMT) -> ();
+	
+	PositionConfigs: {
+		MaxForce: Vector3;
+	};
+	
+	RotationConfigs: {
+		MaxTorque: Vector3;
+	};
+}
+
+local function main(part: BasePart): (BVMT, BVMT)
+	if not (typeof(part) == "Instance" and part:IsA("BasePart")) then
+		local _, class = xpcall(function()
+			return part.ClassName;
+		end, function()
+			return
+		end)
+		
+		return warn("BVMT: Expected BasePart, got "..(class or typeof(part))..".");
+	end
+	
+	local userdata: BVMT = newproxy(true);
+	local metatable: BVMT = getmetatable(userdata);
+	
+	local public: BVMT = {
+		Connected = false;
+		CFrame = nil;
+		Position = nil;
+		Orientation = nil;
+		PositionInstance = nil;
+		RotationInstance = nil;
+		
+		PositionConfigs = {
+			MaxForce = Vector3.new(math.huge, math.huge, math.huge);
+			P = 2e8;
+			D = 3e4;
+		};
+		
+		RotationConfigs = {
+			MaxTorque = Vector3.new(math.huge, math.huge, math.huge);
+			P = 2e8;
+			D = 3e4;
+		};
+	}
+	
+	metatable.public = public;
+	
+	local function setPosition(v: Vector3)
+		local bvp: BodyPosition = public.PositionInstance;
+		
+		if not bvp then
+			bvp = Instance.new("BodyPosition");
+			
+			local bvp: BodyPosition = bvp;
+			
+			for k: string, v in next, public.PositionConfigs do
+				bvp[k] = v;
+			end
+			
+			bvp.Position = v;
+			bvp.Name = "BVMT_PositionInstance"
+			bvp.Parent = part;
+			return bvp;
+		end
+		
+		bvp.Position = v;
+		return bvp;
+	end
+	
+	local function setRotation(v: CFrame)
+		local bvg: BodyGyro = public.RotationInstance;
+		
+		if not bvg then
+			bvg = Instance.new("BodyGyro");
+			
+			local bvg: BodyGyro = bvg;
+			
+			for k: string, v in next, public.RotationConfigs do
+				bvg[k] = v;
+			end
+			
+			bvg.CFrame = v;
+			bvg.Name = "BVMT_RotationInstance"
+			bvg.Parent = part;
+			return bvg;
+		end
+		
+		bvg.CFrame = v;
+		return bvg;
+	end
+	
+	function metatable.__call(): BasePart | nil
+		return typeof(part) == "Instance" and part:IsDescendantOf(workspace) and part or nil;
+	end
+	
+	function metatable.__index(_, k)
+		local success, data = pcall(function()
+			return public[k] or part[k];
+		end)
+		
+		if success then
+			return data;
+		else
+			warn("Attempt to index nil with "..k..".");
+		end
+	end
+	
+	function metatable.__newindex(t, k, v: CFrame)
+		if not part then
+			return warn("Attempt to index nil with "..k..".");
+		end
+		
+		if k == "CFrame" then
+			local v: CFrame = v;
+			local position = v.Position;
+			local rotation: Vector3;
+			
+			if typeof(v) == "Vector3" then
+				v = CFrame.new(v);
+				rotation = Vector3.zero;
+			else
+				rotation = Vector3.new(v:ToOrientation());
+			end
+			
+			public.PositionInstance = setPosition(position);
+			t.Orientation = rotation;
+			public.CFrame = v;
+			public.Position = position;
+			public.Orientation = rotation;
+			public.Connected = true;
+		elseif k == "Position" then
+			local v: Vector3 = v;
+			
+			if typeof(v) == "CFrame" then
+				v = v.Position
+			end
+			
+			public.PositionInstance = setPosition(v);
+			public.Position = v;
+			public.Connected = true;
+		elseif k == "Orientation" then
+			local v: CFrame = v;
+			
+			if typeof(v) == "Vector3" then
+				public.Orientation = v;
+				v = CFrame.fromOrientation(v.X, v.Y, v.Z);
+			else
+				public.Orientation = Vector3.new(v:ToOrientation());
+			end
+			
+			public.RotationInstance = setRotation(v);
+			public.Connected = true;
+		else
+			part[k] = v;
+		end
+	end
+	
+	function metatable:Disconnect()
+		local self: BVMT = self.public or public;
+		local bvp: BodyPosition = self.PositionInstance;
+
+		if bvp then
+			bvp:Destroy();
+		end
+		
+		local bvg: BodyGyro = self.RotationInstance;
+
+		if bvg then
+			bvg:Destroy();
+		end
+		
+		public.Connected = false;
+	end
+	
+	return unpack({userdata, metatable});
+end
+
+return main;
+--Made by Cert1f1edClothing, cert1f1edfailure#0851, hasthetoethethird#2293
