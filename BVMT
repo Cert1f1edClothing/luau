@@ -24,7 +24,7 @@ local function main(part: BasePart): (BVMT, BVMT)
 			return
 		end)
 		
-		return warn("BVMT: Expected BasePart, got "..(class or typeof(part))..".");
+		return warn("BVMT: Expected BasePart, got "..(class or typeof(part)));
 	end
 	
 	local userdata: BVMT = newproxy(true);
@@ -109,13 +109,13 @@ local function main(part: BasePart): (BVMT, BVMT)
 		if success then
 			return data;
 		else
-			warn("Attempt to index nil with "..k..".");
+			warn("Attempt to index nil with "..k);
 		end
 	end
 	
 	function metatable.__newindex(t, k, v: CFrame)
 		if not part then
-			return warn("Attempt to index nil with "..k..".");
+			return warn("Attempt to index nil with "..k);
 		end
 		
 		if k == "CFrame" then
@@ -166,13 +166,13 @@ local function main(part: BasePart): (BVMT, BVMT)
 	function metatable:Disconnect()
 		local self: BVMT = self.public or public;
 		local bvp: BodyPosition = self.PositionInstance;
-
+		
 		if bvp then
 			bvp:Destroy();
 		end
 		
 		local bvg: BodyGyro = self.RotationInstance;
-
+		
 		if bvg then
 			bvg:Destroy();
 		end
