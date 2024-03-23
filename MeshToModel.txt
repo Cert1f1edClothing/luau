@@ -1,8 +1,8 @@
--- [[ SERVICES ]] --
+--// SERVICES
 
 local AssetService = game:GetService("AssetService");
 
--- [[ FUNCTIONS ]] --
+--// FUNCTIONS
 
 local convert: (meshId: number, limit: number | nil) -> (Model); do
 	local wedge = Instance.new("WedgePart");
@@ -19,6 +19,7 @@ local convert: (meshId: number, limit: number | nil) -> (Model); do
 		}
 
 		local edge = edges[1];
+		
 		for i = 2, #edges do
 			if (edges[i].direction0.magnitude > edge.direction0.magnitude) then
 				edge = edges[i];
