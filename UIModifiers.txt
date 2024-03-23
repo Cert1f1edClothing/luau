@@ -1,0 +1,306 @@
+--// SERVICES
+
+local Lighting = game:GetService("Lighting");
+local RunService = game:GetService("RunService");
+
+--// VARIABLES
+
+local blur = Instance.new("DepthOfFieldEffect");
+
+blur.FarIntensity = 0;
+blur.FocusDistance = 1.5;
+blur.InFocusRadius = 0;
+blur.NearIntensity = 0;
+blur.Name = "UIModifiers.DepthOfFieldEffect";
+blur.Parent = Lighting;
+
+--// FUNCTIONS
+
+local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instance, {}, {}) -> ({}); do
+	local wedge = Instance.new("WedgePart");
+	
+	wedge.Anchored = true;
+	wedge.CanCollide = false;
+	wedge.CastShadow = false;
+	wedge.TopSurface = Enum.SurfaceType.Smooth;
+	wedge.BottomSurface = Enum.SurfaceType.Smooth;
+	
+	function drawTriangle(a, b, c, part1, part2): (WedgePart, WedgePart)
+		local edges = {
+			{direction0 = (c - a), direction1 = (b - a), origin = a},
+			{direction0 = (a - b), direction1 = (c - b), origin = b},
+			{direction0 = (b - c), direction1 = (a - c), origin = c}
+		}
+		
+		local edge = edges[1];
+		
+		for i = 2, #edges do
+			if (edges[i].direction0.magnitude > edge.direction0.magnitude) then
+				edge = edges[i];
+			end
+		end
+		
+		local theta = math.acos(edge.direction0.unit:Dot(edge.direction1.unit));
+		local w1 = math.cos(theta) * edge.direction1.magnitude;
+		local w2 = edge.direction0.magnitude - w1;
+		local h = math.sin(theta) * edge.direction1.magnitude;
+		
+		local p1 = edge.origin + edge.direction1 * .5;
+		local p2 = edge.origin + edge.direction0 + (edge.direction1 - edge.direction0) * .5;
+		
+		local right = edge.direction0:Cross(edge.direction1).unit;
+		local up = right:Cross(edge.direction0).unit;
+		local back = edge.direction0.unit;
+		
+		local cf1 = CFrame.new(
+			p1.x, p1.y, p1.z,
+			-right.x, up.x, back.x,
+			-right.y, up.y, back.y,
+			-right.z, up.z, back.z
+		);
+		
+		local cf2 = CFrame.new(
+			p2.x, p2.y, p2.z,
+			right.x, up.x, -back.x,
+			right.y, up.y, -back.y,
+			right.z, up.z, -back.z
+		);
+		
+		local wedge1 = part1 or wedge:Clone();
+		
+		wedge1.Size = Vector3.new(0, h, w1);
+		wedge1.CFrame = cf1;
+		
+		local wedge2 = part2 or wedge:Clone();
+		
+		wedge2.Size = Vector3.new(0, h, w2);
+		wedge2.CFrame = cf2;
+		
+		return wedge1, wedge2;
+	end
+	
+	function drawQuad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instance, parts: {}, properties: {}): {}
+		local p1, p2 = drawTriangle(a, c, b, parts[1], parts[2]);
+		local p3, p4 = drawTriangle(b, d, a, parts[3], parts[4]);
+		
+		local parts = {p1, p2, p3, p4};
+		
+		for _, part: BasePart in ipairs(parts) do
+			for k, v in next, properties do
+				part[k] = v;
+			end
+			
+			part.Parent = parent;
+		end
+		
+		return parts;
+	end
+end
+
+local ZINDEX = .001;
+
+local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
+	local parts = {};
+	
+	local function func()		
+		local root: Folder; do
+			local metatable = getmetatable(userdata);
+			
+			root = metatable[id];
+			
+			if root == true then
+				return true;
+			elseif not root then
+				root = Instance.new("Folder");
+				root.Name = "UIModifiers."..widget.ClassName.."_"..id;
+			end
+			
+			metatable[id] = root;
+		end
+		
+		local camera = workspace.CurrentCamera;
+		
+		if not (widget and camera) then
+			return true;
+		end
+		
+		local tl = widget.AbsolutePosition;
+		local br = tl + widget.AbsoluteSize;
+		local tr, bl = Vector2.new(br.x, tl.y), Vector2.new(tl.x, br.y);
+		
+		do
+			local rot = widget.Rotation;
+			local temp = widget.Parent;
+			
+			while true do
+				if not (temp and temp:IsA("GuiObject")) then break end
+				
+				rot += temp.Rotation;
+				temp = temp.Parent;
+			end
+			
+			if rot % 90 ~= 0 then
+				rot *= math.pi / 180;
+				
+				local sin, cos = math.sin(rot), math.cos(rot);
+				local med = (tr + bl) / 2;
+				
+				tl = Vector2.new(
+					cos * (tl.x - med.x) - sin * (tl.y - med.y),
+					sin * (tl.x - med.x) + cos * (tl.y - med.y)
+				) + med;
+				
+				br = Vector2.new(
+					cos * (br.x - med.x) - sin * (br.y - med.y),
+					sin * (br.x - med.x) + cos * (br.y - med.y)
+				) + med;
+				
+				tr = Vector2.new(
+					cos * (tr.x - med.x) - sin * (tr.y - med.y),
+					sin * (tr.x - med.x) + cos * (tr.y - med.y)
+				) + med;
+				
+				bl = Vector2.new(
+					cos * (bl.x - med.x) - sin * (bl.y - med.y),
+					sin * (bl.x - med.x) + cos * (bl.y - med.y)
+				) + med;
+			end
+		end
+		
+		parts = drawQuad(
+			camera:ScreenPointToRay(tl.x, tl.y, ZINDEX).Origin,
+			camera:ScreenPointToRay(br.x, br.y, ZINDEX).Origin,
+			camera:ScreenPointToRay(tr.x, tr.y, ZINDEX).Origin,
+			camera:ScreenPointToRay(bl.x, bl.y, ZINDEX).Origin,
+			root,
+			parts,
+			properties
+		)
+		root.Parent = camera;
+	end
+	
+	func();
+	
+	local cnn: RBXScriptConnection;
+	cnn = RunService.RenderStepped:Connect(function()
+		if func() then
+			cnn:Disconnect();
+		end
+	end)
+end
+
+type UIModifiers = {
+	UIBlur: {
+		Intensity: number;
+		Enabled: boolean;
+	};
+	
+	UIGlow: {
+		Intensity: number;
+		Enabled: boolean;
+	};
+}
+
+local function main(widget: GuiObject): UIModifiers
+	local userdata = newproxy(true);
+	local metatable = getmetatable(userdata);
+	
+	local id = tostring(userdata);
+	
+	local public = {
+		Blur = {
+			Intensity = 0;
+			Enabled = false;
+		};
+		
+		Glow = {
+			Intensity = 0;
+			Enabled = false;
+		};
+	}
+	
+	function metatable.__index(_, k)
+		return public[k] or widget[k];
+	end
+	
+	function metatable.__newindex(_, k: string, v)
+		if k == "UIBlur" then
+			local ID = k.."."..id;
+			
+			local v: {
+				Intensity: number;
+				Enabled: boolean;
+			} = v;
+			
+			public.Blur.Enabled = v.Enabled;
+			
+			do
+				local blur = blur;
+				
+				if not (v.Enabled and v.Intensity) then
+					if blur then
+						blur.Enabled = false;
+					end
+					
+					local root: Folder = metatable[ID];
+					
+					if typeof(root) == "Instance" then
+						root:Destroy();
+					end
+					
+					metatable[ID] = true;
+					return
+				end
+				
+				blur.NearIntensity = math.clamp(v.Intensity, 0, 1);
+				blur.Enabled = true;
+			end
+			
+			mainFunc(widget, ID, {
+				Transparency = .99;
+				Material = Enum.Material.Glass;
+				Name = "UIBlur"
+			}, userdata);
+			public.Blur = v;
+		elseif k == "UIGlow" then
+			local ID = k.."."..id;
+			
+			local v: {
+				Intensity: number;
+				Enabled: boolean;
+			} = v;
+			
+			public.Glow.Enabled = v.Enabled;
+			
+			if not (v.Enabled and v.Intensity) then
+				local root: Folder = metatable[ID];
+
+				if typeof(root) == "Instance" then
+					root:Destroy();
+				end
+
+				metatable[ID] = true;
+				return
+			end
+			
+			mainFunc(widget, ID, {
+				Transparency = 1 - math.clamp(v.Intensity, 0, 1);
+				Material = Enum.Material.Neon;
+				Name = "UIGlow"
+			}, userdata);
+			mainFunc(widget, ID, {
+				Transparency = .99;
+				Material = Enum.Material.Glass;
+				Name = "UIGlow"
+			}, userdata);
+			public.Glow = v;
+		else
+			widget[k] = v;
+		end
+	end
+	
+	return userdata;
+end
+
+return main;
+--Made by Cert1f1edClothing, cert1f1edfailure#0851, hasthetoethethird#2293
