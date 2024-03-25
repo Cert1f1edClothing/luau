@@ -5,7 +5,8 @@ type BVMT = {
 	Orientation: CFrame | Vector3;
 	PositionInstance: BodyPosition;
 	RotationInstance: BodyGyro;
-	Disconnect: (self: BVMT) -> ();
+	DisconnectInternal: (self: BVMT) -> ();
+	RemoveExternal: (self: BVMT) -> ({BasePart});
 	
 	PositionConfigs: {
 		MaxForce: Vector3;
@@ -30,6 +31,18 @@ local function main(part: BasePart): (BVMT, BVMT)
 	local userdata: BVMT = newproxy(true);
 	local metatable: BVMT = getmetatable(userdata);
 	
+	local EXTERNAL = {
+		"LineForce";
+		"VectorForce";
+		"BodyVelocity";
+		"BodyAngularVelocity";
+		"BodyGyro";
+		"LinearVelocity";
+		"AngularVelocity";
+		"AlignPosition";
+		"AlignOrientation";
+	}
+	
 	local public: BVMT = {
 		Connected = false;
 		CFrame = nil;
@@ -52,6 +65,10 @@ local function main(part: BasePart): (BVMT, BVMT)
 	}
 	
 	metatable.public = public;
+	
+	function metatable.__call(): BasePart | nil
+		return typeof(part) == "Instance" and part:IsDescendantOf(workspace) and part or nil;
+	end
 	
 	local function setPosition(v: Vector3)
 		local bvp: BodyPosition = public.PositionInstance;
@@ -97,25 +114,21 @@ local function main(part: BasePart): (BVMT, BVMT)
 		return bvg;
 	end
 	
-	function metatable.__call(): BasePart | nil
-		return typeof(part) == "Instance" and part:IsDescendantOf(workspace) and part or nil;
-	end
-	
 	function metatable.__index(_, k)
 		local success, data = pcall(function()
-			return public[k] or part[k];
+			return public[k] or metatable[k] or part[k];
 		end)
 		
 		if success then
 			return data;
 		else
-			warn("Attempt to index nil with "..k);
+			warn("BVMT: Attempt to index nil with "..k);
 		end
 	end
 	
-	function metatable.__newindex(t, k, v: CFrame)
+	function metatable:__newindex(k, v: CFrame)
 		if not part then
-			return warn("Attempt to index nil with "..k);
+			return warn("BVMT: BasePart not found");
 		end
 		
 		if k == "CFrame" then
@@ -131,7 +144,7 @@ local function main(part: BasePart): (BVMT, BVMT)
 			end
 			
 			public.PositionInstance = setPosition(position);
-			t.Orientation = rotation;
+			self.Orientation = rotation;
 			public.CFrame = v;
 			public.Position = position;
 			public.Orientation = rotation;
@@ -163,8 +176,8 @@ local function main(part: BasePart): (BVMT, BVMT)
 		end
 	end
 	
-	function metatable:Disconnect()
-		local self: BVMT = self.public or public;
+	function metatable:DisconnectInternal()
+		local self: BVMT = self and self.public or public;
 		local bvp: BodyPosition = self.PositionInstance;
 		
 		if bvp then
@@ -177,10 +190,31 @@ local function main(part: BasePart): (BVMT, BVMT)
 			bvg:Destroy();
 		end
 		
-		public.Connected = false;
+		self.Connected = false;
 	end
 	
-	return unpack({userdata, metatable});
+	function metatable:RemoveExternal(): {BasePart}
+		local part = part;
+		
+		if not part then
+			return warn("BVMT: BasePart does not exist");
+		end
+		
+		local self: BVMT = self and self.public or public;
+		
+		local gc = {};
+		
+		for _, v in ipairs(part:GetChildren()) do
+			if table.find(EXTERNAL, v.ClassName) and v ~= self.PositionInstance and v ~= self.RotationInstance then
+				v.Parent = nil;
+				table.insert(gc, v);
+			end
+		end
+		
+		return gc;
+	end
+	
+	return userdata, metatable;
 end
 
 return main;
