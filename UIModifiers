@@ -17,6 +17,10 @@ type UIModifiers = {
 local Lighting = game:GetService("Lighting");
 local RunService = game:GetService("RunService");
 
+--// CONSTANTS
+
+local ZINDEX = .001;
+
 --// FUNCTIONS
 
 local function newBlur(id: string): DepthOfFieldEffect
@@ -111,8 +115,6 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 		return parts;
 	end
 end
-
-local ZINDEX = .001;
 
 local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 	local parts = {};
