@@ -3,18 +3,19 @@
 local Lighting = game:GetService("Lighting");
 local RunService = game:GetService("RunService");
 
---// VARIABLES
-
-local blur = Instance.new("DepthOfFieldEffect");
-
-blur.FarIntensity = 0;
-blur.FocusDistance = 1.5;
-blur.InFocusRadius = 0;
-blur.NearIntensity = 0;
-blur.Name = "UIModifiers.DepthOfFieldEffect";
-blur.Parent = Lighting;
-
 --// FUNCTIONS
+
+local function newBlur(id: string): DepthOfFieldEffect
+	local blur = Instance.new("DepthOfFieldEffect");
+	
+	blur.FarIntensity = 0;
+	blur.FocusDistance = 1.5;
+	blur.InFocusRadius = 0;
+	blur.NearIntensity = 0;
+	blur.Name = "UIModifiers.DepthOfFieldEffect_"..id;
+	blur.Parent = Lighting;
+	return blur;
+end
 
 local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instance, {}, {}) -> ({}); do
 	local wedge = Instance.new("WedgePart");
@@ -105,8 +106,10 @@ local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 	local function func()		
 		local root: Folder; do
 			local metatable = getmetatable(userdata);
+			local mt = metatable[id] or {};
 			
-			root = metatable[id];
+			metatable[id] = mt;
+			root = mt.root;
 			
 			if root == true then
 				return true;
@@ -115,7 +118,7 @@ local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 				root.Name = "UIModifiers."..widget.ClassName.."_"..id;
 			end
 			
-			metatable[id] = root;
+			metatable[id].root = root;
 		end
 		
 		local camera = workspace.CurrentCamera;
@@ -204,55 +207,62 @@ type UIModifiers = {
 local function main(widget: GuiObject): UIModifiers
 	local userdata = newproxy(true);
 	local metatable = getmetatable(userdata);
-	
 	local id = tostring(userdata);
 	
 	local public = {
 		Blur = {
 			Intensity = 0;
-			Enabled = false;
+			Enabled = true;
 		};
 		
 		Glow = {
 			Intensity = 0;
-			Enabled = false;
+			Enabled = true;
 		};
 	}
 	
-	function metatable.__index(_, k)
+	function metatable.__index(_, k: string)
 		return public[k] or widget[k];
 	end
 	
-	function metatable.__newindex(_, k: string, v)
+	function metatable:__newindex(k: string, v)
+		local ID = k.."."..id;
+		
 		if k == "UIBlur" then
-			local ID = k.."."..id;
-			
 			local v: {
 				Intensity: number;
 				Enabled: boolean;
 			} = v;
 			
-			public.Blur.Enabled = v.Enabled;
+			for k, v in next, v do
+				if v == nil then continue end
+				
+				self.Blur[k] = v;
+			end
 			
 			do
-				local blur = blur;
+				local mt = metatable[ID] or {};
+				local blur = mt.Blur or newBlur(ID);
 				
-				if not (v.Enabled and v.Intensity) then
+				mt.Blur = blur;
+				metatable[ID] = mt;
+				
+				if not self.Blur.Enabled then
 					if blur then
 						blur.Enabled = false;
 					end
 					
-					local root: Folder = metatable[ID];
+					local root: Folder = mt.root;
 					
 					if typeof(root) == "Instance" then
 						root:Destroy();
 					end
 					
-					metatable[ID] = true;
+					metatable[ID].root = true;
 					return
 				end
 				
-				blur.NearIntensity = math.clamp(v.Intensity, 0, 1);
+				blur.NearIntensity = math.clamp(self.Blur.Intensity, 0, 1);
 				blur.Enabled = true;
 			end
 			
@@ -261,26 +271,42 @@ local function main(widget: GuiObject): UIModifiers
 				Material = Enum.Material.Glass;
 				Name = "UIBlur"
 			}, userdata);
-			public.Blur = v;
 		elseif k == "UIGlow" then
-			local ID = k.."."..id;
-			
 			local v: {
 				Intensity: number;
 				Enabled: boolean;
 			} = v;
 			
-			public.Glow.Enabled = v.Enabled;
+			for k, v in next, v do
+				if v == nil then continue end
+				
+				self.Glow[k] = v;
+			end
 			
-			if not (v.Enabled and v.Intensity) then
-				local root: Folder = metatable[ID];
-
-				if typeof(root) == "Instance" then
-					root:Destroy();
+			do
+				local mt = metatable[ID] or {};
+				local blur = mt.Blur or newBlur(ID);
+				
+				mt.Blur = blur;
+				metatable[ID] = mt;
+				
+				if not self.Glow.Enabled then
+					if blur then
+						blur.Enabled = false;
+					end
+					
+					local root: Folder = mt.root;
+					
+					if typeof(root) == "Instance" then
+						root:Destroy();
+					end
+					
+					metatable[ID].root = true;
+					return
 				end
-
-				metatable[ID] = true;
-				return
+				
+				blur.NearIntensity = math.clamp(self.Glow.Intensity, 0, 1);
+				blur.Enabled = true;
 			end
 			
 			mainFunc(widget, ID, {
@@ -293,7 +319,6 @@ local function main(widget: GuiObject): UIModifiers
 				Material = Enum.Material.Glass;
 				Name = "UIGlow"
 			}, userdata);
-			public.Glow = v;
 		else
 			widget[k] = v;
 		end
