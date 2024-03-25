@@ -114,7 +114,7 @@ local function main(part: BasePart): (BVMT, BVMT)
 		return bvg;
 	end
 	
-	function metatable.__index(_, k)
+	function metatable.__index(_, k: string)
 		local success, data = pcall(function()
 			return public[k] or metatable[k] or part[k];
 		end)
@@ -126,7 +126,7 @@ local function main(part: BasePart): (BVMT, BVMT)
 		end
 	end
 	
-	function metatable:__newindex(k, v: CFrame)
+	function metatable:__newindex(k: string, v: CFrame)
 		if not part then
 			return warn("BVMT: BasePart not found");
 		end
