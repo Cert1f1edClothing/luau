@@ -1,3 +1,5 @@
+--// TYPES
+
 type BVMT = {
 	Connected: boolean;
 	CFrame: CFrame | Vector3;
@@ -16,6 +18,8 @@ type BVMT = {
 		MaxTorque: Vector3;
 	};
 }
+
+--// FUNCTIONS
 
 local function main(part: BasePart): (BVMT, BVMT)
 	if not (typeof(part) == "Instance" and part:IsA("BasePart")) then
