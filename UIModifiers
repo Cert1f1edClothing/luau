@@ -1,25 +1,7 @@
---// TYPES
-
-type UIModifiers = {
-	UIBlur: {
-		Intensity: number;
-		Enabled: boolean;
-	};
-	
-	UIGlow: {
-		Intensity: number;
-		Enabled: boolean;
-	};
-}
-
 --// SERVICES
 
 local Lighting = game:GetService("Lighting");
 local RunService = game:GetService("RunService");
-
---// CONSTANTS
-
-local ZINDEX = .001;
 
 --// FUNCTIONS
 
@@ -116,10 +98,12 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 	end
 end
 
+local ZINDEX = .001;
+
 local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 	local parts = {};
 	
-	local function func()		
+	local function func(): any
 		local root: Folder; do
 			local metatable = getmetatable(userdata);
 			local mt = metatable[id] or {};
@@ -135,6 +119,10 @@ local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 			end
 			
 			metatable[id].root = root;
+		end
+		
+		if widget and not widget.Visible then
+			return root;
 		end
 		
 		local camera = workspace.CurrentCamera;
@@ -202,11 +190,40 @@ local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 	
 	local cnn: RBXScriptConnection;
 	cnn = RunService.RenderStepped:Connect(function()
-		if func() then
+		local output = func();
+		
+		if typeof(output) == "Instance" then return end
+		
+		if output then
 			cnn:Disconnect();
 		end
 	end)
+
+	local cnn: RBXScriptConnection;
+	cnn = RunService.Heartbeat:Connect(function()
+		local output = func();
+		
+		if typeof(output) == "Instance" then
+			for _, part: BasePart in ipairs(output:GetChildren()) do
+				part:Destroy();
+			end
+			
+			parts = {};
+		end
+	end)
 end
+
+type UIModifiers = {
+	UIBlur: {
+		Intensity: number;
+		Enabled: boolean;
+	};
+	
+	UIGlow: {
+		Intensity: number;
+		Enabled: boolean;
+	};
+}
 
 local function main(widget: GuiObject): UIModifiers
 	local userdata = newproxy(true);
