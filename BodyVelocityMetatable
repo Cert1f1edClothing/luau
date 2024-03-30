@@ -8,7 +8,7 @@ type BVMT = {
 	PositionInstance: BodyPosition;
 	RotationInstance: BodyGyro;
 	DisconnectInternal: (self: BVMT) -> ();
-	RemoveExternal: (self: BVMT) -> ({BasePart});
+	RemoveExternal: (self: BVMT) -> {BasePart};
 	
 	PositionConfigs: {
 		MaxForce: Vector3;
