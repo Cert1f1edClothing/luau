@@ -65,7 +65,7 @@ local convert: (meshId: number, limit: number) -> (Model); do
 		return wedge1, wedge2;
 	end
 
-	function convert(meshId: number, limit: number): Model
+	function convert(meshId: number, limit: number | nil): Model
 		local model = Instance.new("Model");
 		local editableMesh = AssetService:CreateEditableMeshAsync("rbxassetid://"..tostring(meshId));
 
