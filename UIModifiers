@@ -1,7 +1,25 @@
+--// TYPES
+
+type UIModifiers = {
+	UIBlur: {
+		Intensity: number;
+		Enabled: boolean;
+	};
+	
+	UIGlow: {
+		Intensity: number;
+		Enabled: boolean;
+	};
+}
+
 --// SERVICES
 
 local Lighting = game:GetService("Lighting");
 local RunService = game:GetService("RunService");
+
+--// CONSTANTS
+
+local ZINDEX = .001;
 
 --// FUNCTIONS
 
@@ -97,8 +115,6 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 		return parts;
 	end
 end
-
-local ZINDEX = .001;
 
 local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 	local parts = {};
@@ -212,18 +228,6 @@ local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 		end
 	end)
 end
-
-type UIModifiers = {
-	UIBlur: {
-		Intensity: number;
-		Enabled: boolean;
-	};
-	
-	UIGlow: {
-		Intensity: number;
-		Enabled: boolean;
-	};
-}
 
 local function main(widget: GuiObject): UIModifiers
 	local userdata = newproxy(true);
