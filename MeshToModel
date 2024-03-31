@@ -4,7 +4,7 @@ local AssetService = game:GetService("AssetService");
 
 --// FUNCTIONS
 
-local convert: (meshId: number, limit: number) -> (Model); do
+local main: (meshId: number, limit: number) -> (Model); do
 	local wedge = Instance.new("WedgePart");
 
 	wedge.Anchored = true;
@@ -65,7 +65,7 @@ local convert: (meshId: number, limit: number) -> (Model); do
 		return wedge1, wedge2;
 	end
 
-	function convert(meshId: number, limit: number | nil): Model
+	function main(meshId: number, limit: number | nil): Model
 		local model = Instance.new("Model");
 		local editableMesh = AssetService:CreateEditableMeshAsync("rbxassetid://"..tostring(meshId));
 
@@ -83,5 +83,5 @@ local convert: (meshId: number, limit: number) -> (Model); do
 	end
 end
 
-return convert;
+return main;
 --Made by Cert1f1edClothing, cert1f1edfailure#0851, hasthetoethethird#2293
