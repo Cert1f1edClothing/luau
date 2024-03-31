@@ -1,0 +1,109 @@
+--// TYPES
+
+type Cert1f1edBuffer = {buffer};
+type bufferdata = {
+	readbuffer: (b: Cert1f1edBuffer) -> {number | string | {string & number}};
+	writebuffer: (self: bufferdata, ... number | string | {string & number}) -> Cert1f1edBuffer;
+}
+
+--// SERVICES
+
+local HttpService = game:GetService("HttpService");
+
+--// FUNCTIONS
+
+local function main(): bufferdata
+	local userdata: bufferdata = newproxy(true);
+	local metatable: bufferdata = getmetatable(userdata);
+	metatable.__index = metatable;
+	
+	function metatable.readbuffer(b: Cert1f1edBuffer)
+		local data = {}; do
+			local numlen = buffer.readf64(b, 8);
+			local offset = numlen * 8 + 24;
+			
+			for i = 1, numlen do
+				table.insert(data, buffer.readf64(b, i * 8));
+			end
+			
+			local id = buffer.readstring(b, offset, buffer.readf64(b, 0));
+			local isTable = false;
+			local strlen = buffer.readf64(b, 16);
+			local global_i = offset + #id;
+			
+			for i = 1, strlen do
+				local v = buffer.readstring(b, strlen * 8 + global_i, buffer.readf64(b, offset + #id + i * 8 - 8));
+				
+				global_i += #v;
+				
+				if v == id..".table" then
+					isTable = true;
+					continue
+				elseif isTable then
+					isTable = false;
+					v = HttpService:JSONDecode(v);
+				end
+				
+				table.insert(data, v);
+			end
+		end
+		
+		return data;
+	end
+	
+	function metatable:writebuffer(...): Cert1f1edBuffer
+		local id = tostring(self).."."..tostring(metatable);
+		local bytes = #id + 24;
+		
+		local numbers: {number} = {};
+		local strings: {string} = {};
+		
+		for _, v in next, {...} do
+			local type = type(v);
+			
+			if type == "number" then
+				bytes += 8;
+				table.insert(numbers, v);
+			elseif type == "string" then
+				bytes += #v + 8;
+				table.insert(strings, v);
+			elseif type == "table" then
+				local id = id.."."..type;
+				local json = HttpService:JSONEncode(v);
+				
+				bytes += #json + #id + 16;
+				table.insert(strings, id);
+				table.insert(strings, json);
+			end
+		end
+		
+		local b = buffer.create(bytes);
+
+		buffer.writef64(b, 0, #id);
+		buffer.writef64(b, 8, #numbers);
+		buffer.writef64(b, 16, #strings);
+		
+		for i, v in ipairs(numbers) do
+			buffer.writef64(b, i * 8 + 16, v);
+		end
+		
+		local offset = #numbers * 8 + 24;
+		
+		buffer.writestring(b, offset, id);
+		
+		local global_i = offset + #id;
+		
+		for i, v in ipairs(strings) do
+			buffer.writef64(b, offset + #id + i * 8 - 8, #v);
+			buffer.writestring(b, #strings * 8 + global_i, v);
+			global_i += #v;
+		end
+		
+		return b;
+	end
+	
+	return userdata;
+end
+
+return main();
+--Made by Cert1f1edClothing, cert1f1edfailure#0851, hasthetoethethird#2293
