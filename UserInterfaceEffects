@@ -1,11 +1,11 @@
 --// TYPES
 
-type UIModifiers = {
+type UserInterfaceEffects = {
 	UIBlur: {
 		Intensity: number;
 		Enabled: boolean;
 	};
-	
+
 	UIGlow: {
 		Intensity: number;
 		Enabled: boolean;
@@ -25,171 +25,171 @@ local ZINDEX = .001;
 
 local function newBlur(id: string): DepthOfFieldEffect
 	local blur = Instance.new("DepthOfFieldEffect");
-	
+
 	blur.FarIntensity = 0;
 	blur.FocusDistance = 1.5;
 	blur.InFocusRadius = 0;
 	blur.NearIntensity = 0;
-	blur.Name = "UIModifiers.DepthOfFieldEffect_"..id;
+	blur.Name = "UserInterfaceEffects.DepthOfFieldEffect_"..id;
 	blur.Parent = Lighting;
 	return blur;
 end
 
 local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instance, {}, {}) -> ({}); do
 	local wedge = Instance.new("WedgePart");
-	
+
 	wedge.Anchored = true;
 	wedge.CanCollide = false;
 	wedge.CastShadow = false;
 	wedge.TopSurface = Enum.SurfaceType.Smooth;
 	wedge.BottomSurface = Enum.SurfaceType.Smooth;
-	
+
 	function drawTriangle(a, b, c, part1, part2): (WedgePart, WedgePart)
 		local edges = {
 			{direction0 = (c - a), direction1 = (b - a), origin = a},
 			{direction0 = (a - b), direction1 = (c - b), origin = b},
 			{direction0 = (b - c), direction1 = (a - c), origin = c}
 		}
-		
+
 		local edge = edges[1];
-		
+
 		for i = 2, #edges do
 			if (edges[i].direction0.magnitude > edge.direction0.magnitude) then
 				edge = edges[i];
 			end
 		end
-		
+
 		local theta = math.acos(edge.direction0.unit:Dot(edge.direction1.unit));
 		local w1 = math.cos(theta) * edge.direction1.magnitude;
 		local w2 = edge.direction0.magnitude - w1;
 		local h = math.sin(theta) * edge.direction1.magnitude;
-		
+
 		local p1 = edge.origin + edge.direction1 * .5;
 		local p2 = edge.origin + edge.direction0 + (edge.direction1 - edge.direction0) * .5;
-		
+
 		local right = edge.direction0:Cross(edge.direction1).unit;
 		local up = right:Cross(edge.direction0).unit;
 		local back = edge.direction0.unit;
-		
+
 		local cf1 = CFrame.new(
 			p1.x, p1.y, p1.z,
 			-right.x, up.x, back.x,
 			-right.y, up.y, back.y,
 			-right.z, up.z, back.z
 		);
-		
+
 		local cf2 = CFrame.new(
 			p2.x, p2.y, p2.z,
 			right.x, up.x, -back.x,
 			right.y, up.y, -back.y,
 			right.z, up.z, -back.z
 		);
-		
+
 		local wedge1 = part1 or wedge:Clone();
-		
+
 		wedge1.Size = Vector3.new(0, h, w1);
 		wedge1.CFrame = cf1;
-		
+
 		local wedge2 = part2 or wedge:Clone();
-		
+
 		wedge2.Size = Vector3.new(0, h, w2);
 		wedge2.CFrame = cf2;
-		
+
 		return wedge1, wedge2;
 	end
-	
+
 	function drawQuad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instance, parts: {}, properties: {}): {}
 		local p1, p2 = drawTriangle(a, c, b, parts[1], parts[2]);
 		local p3, p4 = drawTriangle(b, d, a, parts[3], parts[4]);
-		
+
 		local parts = {p1, p2, p3, p4};
-		
+
 		for _, part: BasePart in ipairs(parts) do
 			for k, v in next, properties do
 				part[k] = v;
 			end
-			
+
 			part.Parent = parent;
 		end
-		
+
 		return parts;
 	end
 end
 
 local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 	local parts = {};
-	
+
 	local function func(): any
 		local root: Folder; do
 			local metatable = getmetatable(userdata);
 			local mt = metatable[id] or {};
-			
+
 			metatable[id] = mt;
 			root = mt.root;
-			
+
 			if root == true then
 				return true;
 			elseif not root then
 				root = Instance.new("Folder");
-				root.Name = "UIModifiers."..widget.ClassName.."_"..id;
+				root.Name = "UserInterfaceEffects."..widget.ClassName.."_"..id;
 			end
-			
+
 			metatable[id].root = root;
 		end
-		
+
 		if widget and not widget.Visible then
 			return root;
 		end
-		
+
 		local camera = workspace.CurrentCamera;
-		
+
 		if not (widget and camera) then
 			return true;
 		end
-		
+
 		local tl = widget.AbsolutePosition;
 		local br = tl + widget.AbsoluteSize;
 		local tr, bl = Vector2.new(br.x, tl.y), Vector2.new(tl.x, br.y);
-		
+
 		do
 			local rot = widget.Rotation;
 			local temp = widget.Parent;
-			
+
 			while true do
 				if not (temp and temp:IsA("GuiObject")) then break end
-				
+
 				rot += temp.Rotation;
 				temp = temp.Parent;
 			end
-			
+
 			if rot % 90 ~= 0 then
 				rot *= math.pi / 180;
-				
+
 				local sin, cos = math.sin(rot), math.cos(rot);
 				local med = (tr + bl) / 2;
-				
+
 				tl = Vector2.new(
 					cos * (tl.x - med.x) - sin * (tl.y - med.y),
 					sin * (tl.x - med.x) + cos * (tl.y - med.y)
 				) + med;
-				
+
 				br = Vector2.new(
 					cos * (br.x - med.x) - sin * (br.y - med.y),
 					sin * (br.x - med.x) + cos * (br.y - med.y)
 				) + med;
-				
+
 				tr = Vector2.new(
 					cos * (tr.x - med.x) - sin * (tr.y - med.y),
 					sin * (tr.x - med.x) + cos * (tr.y - med.y)
 				) + med;
-				
+
 				bl = Vector2.new(
 					cos * (bl.x - med.x) - sin * (bl.y - med.y),
 					sin * (bl.x - med.x) + cos * (bl.y - med.y)
 				) + med;
 			end
 		end
-		
+
 		parts = drawQuad(
 			camera:ScreenPointToRay(tl.x, tl.y, ZINDEX).Origin,
 			camera:ScreenPointToRay(br.x, br.y, ZINDEX).Origin,
@@ -201,15 +201,15 @@ local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 		)
 		root.Parent = camera;
 	end
-	
+
 	func();
-	
+
 	local cnn: RBXScriptConnection;
 	cnn = RunService.RenderStepped:Connect(function()
 		local output = func();
-		
+
 		if typeof(output) == "Instance" then return end
-		
+
 		if output then
 			cnn:Disconnect();
 		end
@@ -218,79 +218,79 @@ local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 	local cnn: RBXScriptConnection;
 	cnn = RunService.Heartbeat:Connect(function()
 		local output = func();
-		
+
 		if typeof(output) == "Instance" then
 			for _, part: BasePart in ipairs(output:GetChildren()) do
 				part:Destroy();
 			end
-			
+
 			parts = {};
 		end
 	end)
 end
 
-local function main(widget: GuiObject): UIModifiers
+local function main(widget: GuiObject): UserInterfaceEffects
 	local userdata = newproxy(true);
 	local metatable = getmetatable(userdata);
 	local id = tostring(userdata);
-	
+
 	local public = {
 		Blur = {
 			Intensity = 0;
 			Enabled = true;
 		};
-		
+
 		Glow = {
 			Intensity = 0;
 			Enabled = true;
 		};
 	}
-	
+
 	function metatable.__index(_, k: string)
 		return public[k] or widget[k];
 	end
-	
+
 	function metatable:__newindex(k: string, v)
 		local ID = k.."."..id;
-		
+
 		if k == "UIBlur" then
 			local v: {
 				Intensity: number;
 				Enabled: boolean;
 			} = v;
-			
+
 			for k, v in next, v do
 				if v == nil then continue end
-				
+
 				self.Blur[k] = v;
 			end
-			
+
 			do
 				local mt = metatable[ID] or {};
 				local blur = mt.Blur or newBlur(ID);
-				
+
 				mt.Blur = blur;
 				metatable[ID] = mt;
-				
+
 				if not self.Blur.Enabled then
 					if blur then
 						blur.Enabled = false;
 					end
-					
+
 					local root: Folder = mt.root;
-					
+
 					if typeof(root) == "Instance" then
 						root:Destroy();
 					end
-					
+
 					metatable[ID].root = true;
 					return
 				end
-				
+
 				blur.NearIntensity = math.clamp(self.Blur.Intensity, 0, 1);
 				blur.Enabled = true;
 			end
-			
+
 			mainFunc(widget, ID, {
 				Transparency = .99;
 				Material = Enum.Material.Glass;
@@ -301,39 +301,39 @@ local function main(widget: GuiObject): UIModifiers
 				Intensity: number;
 				Enabled: boolean;
 			} = v;
-			
+
 			for k, v in next, v do
 				if v == nil then continue end
-				
+
 				self.Glow[k] = v;
 			end
-			
+
 			do
 				local mt = metatable[ID] or {};
 				local blur = mt.Blur or newBlur(ID);
-				
+
 				mt.Blur = blur;
 				metatable[ID] = mt;
-				
+
 				if not self.Glow.Enabled then
 					if blur then
 						blur.Enabled = false;
 					end
-					
+
 					local root: Folder = mt.root;
-					
+
 					if typeof(root) == "Instance" then
 						root:Destroy();
 					end
-					
+
 					metatable[ID].root = true;
 					return
 				end
-				
+
 				blur.NearIntensity = math.clamp(self.Glow.Intensity, 0, 1);
 				blur.Enabled = true;
 			end
-			
+
 			mainFunc(widget, ID, {
 				Transparency = 1 - math.clamp(v.Intensity, 0, 1);
 				Material = Enum.Material.Neon;
@@ -348,7 +348,7 @@ local function main(widget: GuiObject): UIModifiers
 			widget[k] = v;
 		end
 	end
-	
+
 	return userdata;
 end
 
