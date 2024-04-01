@@ -1,9 +1,9 @@
 --// TYPES
 
-type Cert1f1edBuffer = {buffer};
+type AutoBuffer = {buffer};
 type bufferdata = {
-	readbuffer: (b: Cert1f1edBuffer) -> {number | string | {string & number}};
-	writebuffer: (self: bufferdata, ... number | string | {string & number}) -> Cert1f1edBuffer;
+	readbuffer: (b: AutoBuffer) -> {number | string | {string & number}};
+	writebuffer: (self: bufferdata, ... number | string | {string & number}) -> AutoBuffer;
 }
 
 --// SERVICES
@@ -17,7 +17,7 @@ local function main(): bufferdata
 	local metatable: bufferdata = getmetatable(userdata);
 	metatable.__index = metatable;
 	
-	function metatable.readbuffer(b: Cert1f1edBuffer)
+	function metatable.readbuffer(b: AutoBuffer)
 		local data = {}; do
 			local numlen = buffer.readf64(b, 8);
 			local offset = numlen * 8 + 24;
@@ -51,7 +51,7 @@ local function main(): bufferdata
 		return data;
 	end
 	
-	function metatable:writebuffer(...): Cert1f1edBuffer
+	function metatable:writebuffer(...): AutoBuffer
 		local id = tostring(self).."."..tostring(metatable);
 		local bytes = #id + 24;
 		
