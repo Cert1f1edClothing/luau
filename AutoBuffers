@@ -52,7 +52,7 @@ local function main(): bufferdata
 	end
 	
 	function metatable:writebuffer(...): AutoBuffer
-		local id = tostring(self).."."..tostring(metatable);
+		local id = tostring(self or userdata).."."..tostring(metatable);
 		local bytes = #id + 24;
 		
 		local numbers: {number} = {};
