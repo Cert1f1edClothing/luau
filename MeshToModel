@@ -43,7 +43,6 @@ local main: (meshId: number) -> Model = newproxy(true); do
 			-right.z, up.z, back.z
 		);
 		
-		
 		local cf2 = CFrame.new(
 			p2.x, p2.y, p2.z,
 			right.x, up.x, -back.x,
