@@ -97,99 +97,101 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 
 		return wedge1, wedge2;
 	end
-
+	
 	function drawQuad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instance, parts: {}, properties: {}): {}
 		local p1, p2 = drawTriangle(a, c, b, parts[1], parts[2]);
 		local p3, p4 = drawTriangle(b, d, a, parts[3], parts[4]);
-
+		
 		local parts = {p1, p2, p3, p4};
-
-		for _, part: BasePart in ipairs(parts) do
+		
+		for _, part: WedgePart in ipairs(parts) do
 			for k, v in next, properties do
 				part[k] = v;
 			end
-
+			
 			part.Parent = parent;
 		end
-
+		
 		return parts;
 	end
 end
 
-local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
-	local parts = {};
+local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata): {WedgePart}
+	local metatable = getmetatable(userdata);
 
+	local mt = metatable[id] or {};
+	
+	metatable[id] = mt;
+	
+	local parts = mt[properties.Name] and unpack(mt[properties.Name]) or {};
+	
 	local function func(): any
-		local root: Folder; do
-			local metatable = getmetatable(userdata);
-			local mt = metatable[id] or {};
-
-			metatable[id] = mt;
-			root = mt.root;
-
-			if root == true then
-				return true;
-			elseif not root then
-				root = Instance.new("Folder");
-				root.Name = "UserInterfaceEffects."..widget.ClassName.."_"..id;
-			end
-
-			metatable[id].root = root;
+		local root: Folder;
+		
+		root = mt.root;
+		
+		if root == true then
+			return true;
+		elseif not root then
+			root = Instance.new("Folder");
+			root.Name = "UserInterfaceEffects."..widget.ClassName.."_"..id;
 		end
-
+		
+		metatable[id].root = root;
+		
 		if widget and not widget.Visible then
 			return root;
 		end
-
+		
 		local camera = workspace.CurrentCamera;
 
 		if not (widget and camera) then
 			return true;
 		end
-
+		
 		local tl = widget.AbsolutePosition;
 		local br = tl + widget.AbsoluteSize;
 		local tr, bl = Vector2.new(br.x, tl.y), Vector2.new(tl.x, br.y);
-
+		
 		do
 			local rot = widget.Rotation;
 			local temp = widget.Parent;
-
+			
 			while true do
 				if not (temp and temp:IsA("GuiObject")) then break end
 
 				rot += temp.Rotation;
 				temp = temp.Parent;
 			end
-
+			
 			if rot % 90 ~= 0 then
 				rot *= math.pi / 180;
-
+				
 				local sin, cos = math.sin(rot), math.cos(rot);
 				local med = (tr + bl) / 2;
-
+				
 				tl = Vector2.new(
 					cos * (tl.x - med.x) - sin * (tl.y - med.y),
 					sin * (tl.x - med.x) + cos * (tl.y - med.y)
 				) + med;
-
+				
 				br = Vector2.new(
 					cos * (br.x - med.x) - sin * (br.y - med.y),
 					sin * (br.x - med.x) + cos * (br.y - med.y)
 				) + med;
-
+				
 				tr = Vector2.new(
 					cos * (tr.x - med.x) - sin * (tr.y - med.y),
 					sin * (tr.x - med.x) + cos * (tr.y - med.y)
 				) + med;
-
+				
 				bl = Vector2.new(
 					cos * (bl.x - med.x) - sin * (bl.y - med.y),
 					sin * (bl.x - med.x) + cos * (bl.y - med.y)
 				) + med;
 			end
 		end
-
+		
 		parts = drawQuad(
 			camera:ScreenPointToRay(tl.x, tl.y, ZINDEX).Origin,
 			camera:ScreenPointToRay(br.x, br.y, ZINDEX).Origin,
@@ -201,154 +203,154 @@ local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 		)
 		root.Parent = camera;
 	end
-
+	
 	func();
-
+	
 	local cnn: RBXScriptConnection;
 	cnn = RunService.RenderStepped:Connect(function()
 		local output = func();
-
+		
 		if typeof(output) == "Instance" then return end
-
+		
 		if output then
 			cnn:Disconnect();
 		end
 	end)
-
+	
 	local cnn: RBXScriptConnection;
 	cnn = RunService.Heartbeat:Connect(function()
 		local output = func();
-
+		
 		if typeof(output) == "Instance" then
-			for _, part: BasePart in ipairs(output:GetChildren()) do
-				part:Destroy();
+			for _, part: WedgePart in ipairs(output:GetChildren()) do
+				part.Parent = nil;
 			end
-
-			parts = {};
 		end
 	end)
+	
+	return parts;
 end
 
 local function main(widget: GuiObject): UserInterfaceEffects
 	local userdata = newproxy(true);
 	local metatable = getmetatable(userdata);
 	local id = tostring(userdata);
-
+	
 	local public = {
 		Blur = {
 			Intensity = 0;
 			Enabled = true;
 		};
-
+		
 		Glow = {
 			Intensity = 0;
 			Enabled = true;
 		};
 	}
-
+	
 	function metatable.__index(_, k: string)
 		return public[k] or widget[k];
 	end
-
+	
 	function metatable:__newindex(k: string, v)
 		local ID = k.."."..id;
-
+		
 		if k == "UIBlur" then
 			local v: {
 				Intensity: number;
 				Enabled: boolean;
 			} = v;
-
+			
 			for k, v in next, v do
 				if v == nil then continue end
 
 				self.Blur[k] = v;
 			end
-
-			do
-				local mt = metatable[ID] or {};
-				local blur = mt.Blur or newBlur(ID);
-
-				mt.Blur = blur;
-				metatable[ID] = mt;
-
-				if not self.Blur.Enabled then
-					if blur then
-						blur.Enabled = false;
-					end
-
-					local root: Folder = mt.root;
-
-					if typeof(root) == "Instance" then
-						root:Destroy();
-					end
-
-					metatable[ID].root = true;
-					return
+			
+			local mt = metatable[ID] or {};
+			local blur = mt.Blur or newBlur(ID);
+			
+			mt.Blur = blur;
+			metatable[ID] = mt;
+			
+			if not self.Blur.Enabled then
+				if blur then
+					blur.Enabled = false;
 				end
-
-				blur.NearIntensity = math.clamp(self.Blur.Intensity, 0, 1);
-				blur.Enabled = true;
+				
+				local root: Folder = mt.root;
+				
+				if typeof(root) == "Instance" then
+					root:Destroy();
+				end
+				
+				metatable[ID].root = true;
+				return
 			end
-
-			mainFunc(widget, ID, {
-				Transparency = .99;
-				Material = Enum.Material.Glass;
-				Name = "UIBlur"
-			}, userdata);
+			
+			blur.NearIntensity = math.clamp(self.Blur.Intensity, 0, 1);
+			blur.Enabled = true;
+			
+			mt.UIBlur = {
+				mainFunc(widget, ID, {
+					Transparency = .99;
+					Material = Enum.Material.Glass;
+					Name = "UIBlur";
+				}, userdata)
+			}
 		elseif k == "UIGlow" then
 			local v: {
 				Intensity: number;
 				Enabled: boolean;
 			} = v;
-
+			
 			for k, v in next, v do
 				if v == nil then continue end
-
+				
 				self.Glow[k] = v;
 			end
-
-			do
-				local mt = metatable[ID] or {};
-				local blur = mt.Blur or newBlur(ID);
-
-				mt.Blur = blur;
-				metatable[ID] = mt;
-
-				if not self.Glow.Enabled then
-					if blur then
-						blur.Enabled = false;
-					end
-
-					local root: Folder = mt.root;
-
-					if typeof(root) == "Instance" then
-						root:Destroy();
-					end
-
-					metatable[ID].root = true;
-					return
+			
+			local mt = metatable[ID] or {};
+			local blur = mt.Blur or newBlur(ID);
+			
+			mt.Blur = blur;
+			metatable[ID] = mt;
+			
+			if not self.Glow.Enabled then
+				if blur then
+					blur.Enabled = false;
 				end
-
-				blur.NearIntensity = math.clamp(self.Glow.Intensity, 0, 1);
-				blur.Enabled = true;
+				
+				local root: Folder = mt.root;
+				
+				if typeof(root) == "Instance" then
+					root:Destroy();
+				end
+				
+				metatable[ID].root = true;
+				return
 			end
-
-			mainFunc(widget, ID, {
-				Transparency = 1 - math.clamp(v.Intensity, 0, 1);
-				Material = Enum.Material.Neon;
-				Name = "UIGlow"
-			}, userdata);
-			mainFunc(widget, ID, {
-				Transparency = .99;
-				Material = Enum.Material.Glass;
-				Name = "UIGlow"
-			}, userdata);
+			
+			blur.NearIntensity = math.clamp(self.Glow.Intensity, 0, 1);
+			blur.Enabled = true;
+			
+			mt.UIGlow = {
+				mainFunc(widget, ID, {
+					Transparency = 1 - v.Intensity;
+					Material = Enum.Material.Neon;
+					Name = "UIGlow";
+				}, userdata),
+				mainFunc(widget, ID, {
+					Transparency = .99;
+					Material = Enum.Material.Glass;
+					Name = "UIGlow";
+				}, userdata)
+			}
 		else
 			widget[k] = v;
 		end
 	end
-
+	
 	return userdata;
 end
 
