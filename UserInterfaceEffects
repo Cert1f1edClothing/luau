@@ -4,12 +4,13 @@ type UserInterfaceEffects = {
 	UIBlur: {
 		Intensity: number;
 		Enabled: boolean;
-	};
-
+		properties: BasePart;
+	},
 	UIGlow: {
 		Intensity: number;
 		Enabled: boolean;
-	};
+		properties: BasePart;
+	}
 }
 
 --// SERVICES
@@ -256,11 +257,6 @@ local function main(widget: GuiObject): UserInterfaceEffects
 		local ID = k.."."..id;
 		
 		if k == "UIBlur" then
-			local v: {
-				Intensity: number;
-				Enabled: boolean;
-			} = v;
-			
 			for k, v in next, v do
 				if v == nil then continue end
 
@@ -291,19 +287,25 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			blur.NearIntensity = math.clamp(self.Blur.Intensity, 0, 1);
 			blur.Enabled = true;
 			
-			mt.UIBlur = {
-				mainFunc(widget, ID, {
-					Transparency = .99;
-					Material = Enum.Material.Glass;
-					Name = "UIBlur";
-				}, userdata)
+			local baseProperties = {
+				Transparency = .99;
+				Material = Enum.Material.Glass;
+				Name = "UIBlur";
 			}
-		elseif k == "UIGlow" then
-			local v: {
-				Intensity: number;
-				Enabled: boolean;
-			} = v;
 			
+			local properties = mt.properties or baseProperties;
+			
+			if v.properties then
+				for k, v in next, v.properties do
+					if baseProperties[k] then break end
+					
+					properties[k] = v;
+				end
+			end
+			
+			metatable[ID].properties = properties;
+			mt.UIBlur = {mainFunc(widget, ID, properties, userdata)};
+		elseif k == "UIGlow" then
 			for k, v in next, v do
 				if v == nil then continue end
 				
@@ -334,18 +336,24 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			blur.NearIntensity = math.clamp(self.Glow.Intensity, 0, 1);
 			blur.Enabled = true;
 			
-			mt.UIGlow = {
-				mainFunc(widget, ID, {
-					Transparency = 1 - v.Intensity;
-					Material = Enum.Material.Neon;
-					Name = "UIGlow";
-				}, userdata),
-				mainFunc(widget, ID, {
-					Transparency = .99;
-					Material = Enum.Material.Glass;
-					Name = "UIGlow";
-				}, userdata)
+			local baseProperties = {
+				Transparency = 1 - v.Intensity;
+				Material = Enum.Material.Neon;
+				Name = "UIGlow";
 			}
+			
+			local properties = mt.properties or baseProperties;
+			
+			if v.properties then
+				for k, v in next, v.properties do
+					if baseProperties[k] then break end
+					
+					properties[k] = v;
+				end
+			end
+			
+			metatable[ID].properties = properties;
+			mt.UIGlow = {mainFunc(widget, ID, properties, userdata)};
 		else
 			widget[k] = v;
 		end
