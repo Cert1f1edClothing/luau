@@ -1,6 +1,6 @@
 --// FUNCTIONS
 
-local main: (meshId: number) -> Model = newproxy(true); do
+local main: BasePart & (meshId: number) -> Model = newproxy(true); do
 	local AssetService = game:GetService("AssetService");
 	
 	local metatable = getmetatable(main);
