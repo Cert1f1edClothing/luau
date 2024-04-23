@@ -237,9 +237,10 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 	return parts;
 end
 
-local function main(widget: GuiObject): UserInterfaceEffects
+local function main(...: GuiObject): UserInterfaceEffects
 	local userdata = newproxy(true);
 	local metatable = getmetatable(userdata);
+	metatable.__index = metatable;
 	
 	metatable.Blur = {
 		Intensity = 0;
@@ -254,8 +255,10 @@ local function main(widget: GuiObject): UserInterfaceEffects
 	
 	local id = tostring(userdata);
 	
-	function metatable.__index(_, k: string)
-		return metatable[k] or widget[k];
+	local widgets =  {...};
+	
+	function metatable.__call(): {GuiObject}
+		return widgets;
 	end
 	
 	function metatable:__newindex(k: string, v)
@@ -309,7 +312,10 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			end
 			
 			metatable[ID].properties = properties;
-			mt.UIBlur = {mainFunc(widget, ID, .01, self.Blur.Thickness, properties, userdata)};
+			
+			for _, v in ipairs(widgets) do
+				mt.UIBlur = {mainFunc(v, ID, .01, self.Blur.Thickness, properties, userdata)};
+			end
 		elseif k == "UIGlow" then
 			for k, v in next, v do
 				if self.Glow[k] then
@@ -349,14 +355,15 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			end
 			
 			metatable[ID].properties = properties;
-			mt.UIGlow = {mainFunc(widget, ID, .01, 0, {
-				Transparency = .99999;
-				Material = Enum.Material.Glass;
-				Name = "UIGlow";
-			}, userdata)}
-			mt.UIGlow = {mainFunc(widget, ID, .011, self.Glow.Thickness, properties, userdata)};
-		else
-			widget[k] = v;
+			
+			for _, v in ipairs(widgets) do
+				mt.UIGlow = {mainFunc(v, ID, .01, 0, {
+					Transparency = .99999;
+					Material = Enum.Material.Glass;
+					Name = "UIGlow";
+				}, userdata)}
+				mt.UIGlow = {mainFunc(v, ID, .011, self.Glow.Thickness, properties, userdata)};
+			end
 		end
 	end
 	
