@@ -3,13 +3,15 @@
 type UserInterfaceEffects = {
 	UIBlur: {
 		Intensity: number;
+		Thickness: number;
 		Enabled: boolean;
-		properties: BasePart;
+		properties: WedgePart;
 	},
 	UIGlow: {
 		Intensity: number;
+		Thickness: number;
 		Enabled: boolean;
-		properties: BasePart;
+		properties: WedgePart;
 	}
 }
 
@@ -113,7 +115,7 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 	end
 end
 
-local function mainFunc(widget: GuiObject, id: string, zIndex: number, properties: {}, userdata): {WedgePart}
+local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness: number, properties: {}, userdata): {WedgePart}
 	local metatable = getmetatable(userdata);
 
 	local mt = metatable[id] or {};
@@ -151,8 +153,6 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, propertie
 		local tr, bl = Vector2.new(br.x, tl.y), Vector2.new(tl.x, br.y);
 		
 		if properties.Material and properties.Material == Enum.Material.Neon then
-			local thickness = 5;
-			
 			tl -= Vector2.one * thickness;
 			br += Vector2.one * thickness;
 			tr += Vector2.new(1, -1) * thickness;
@@ -240,22 +240,22 @@ end
 local function main(widget: GuiObject): UserInterfaceEffects
 	local userdata = newproxy(true);
 	local metatable = getmetatable(userdata);
-	local id = tostring(userdata);
 	
-	local public = {
-		Blur = {
-			Intensity = 0;
-			Enabled = true;
-		};
-		
-		Glow = {
-			Intensity = 0;
-			Enabled = true;
-		};
+	metatable.Blur = {
+		Intensity = 0;
+		Thickness = 0;
+		Enabled = true;
+	}
+	metatable.Glow = {
+		Intensity = 0;
+		Thickness = 1;
+		Enabled = true;
 	}
 	
+	local id = tostring(userdata);
+	
 	function metatable.__index(_, k: string)
-		return public[k] or widget[k];
+		return metatable[k] or widget[k];
 	end
 	
 	function metatable:__newindex(k: string, v)
@@ -263,9 +263,9 @@ local function main(widget: GuiObject): UserInterfaceEffects
 		
 		if k == "UIBlur" then
 			for k, v in next, v do
-				if v == nil then continue end
-
-				self.Blur[k] = v;
+				if self.Blur[k] then
+					self.Blur[k] = v;
+				end
 			end
 			
 			local mt = metatable[ID] or {};
@@ -309,12 +309,12 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			end
 			
 			metatable[ID].properties = properties;
-			mt.UIBlur = {mainFunc(widget, ID, .01, properties, userdata)};
+			mt.UIBlur = {mainFunc(widget, ID, .01, self.Blur.Thickness, properties, userdata)};
 		elseif k == "UIGlow" then
 			for k, v in next, v do
-				if v == nil then continue end
-				
-				self.Glow[k] = v;
+				if self.Glow[k] then
+					self.Glow[k] = v;
+				end
 			end
 			
 			local mt = metatable[ID] or {};
@@ -358,12 +358,12 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			end
 			
 			metatable[ID].properties = properties;
-			mt.UIGlow = {mainFunc(widget, ID, .01, {
+			mt.UIGlow = {mainFunc(widget, ID, .01, 0, {
 				Transparency = .999;
 				Material = Enum.Material.Glass;
 				Name = "UIGlow";
 			}, userdata)}
-			mt.UIGlow = {mainFunc(widget, ID, .011, properties, userdata)};
+			mt.UIGlow = {mainFunc(widget, ID, .011, self.Glow.Thickness, properties, userdata)};
 		else
 			widget[k] = v;
 		end
