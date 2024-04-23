@@ -18,10 +18,6 @@ type UserInterfaceEffects = {
 local Lighting = game:GetService("Lighting");
 local RunService = game:GetService("RunService");
 
---// CONSTANTS
-
-local ZINDEX = .001;
-
 --// FUNCTIONS
 
 local function newBlur(id: string): DepthOfFieldEffect
@@ -117,7 +113,7 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 	end
 end
 
-local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata): {WedgePart}
+local function mainFunc(widget: GuiObject, id: string, zIndex: number, properties: {}, userdata): {WedgePart}
 	local metatable = getmetatable(userdata);
 
 	local mt = metatable[id] or {};
@@ -153,6 +149,15 @@ local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 		local tl = widget.AbsolutePosition;
 		local br = tl + widget.AbsoluteSize;
 		local tr, bl = Vector2.new(br.x, tl.y), Vector2.new(tl.x, br.y);
+		
+		if properties.Material and properties.Material == Enum.Material.Neon then
+			local thickness = 5;
+			
+			tl -= Vector2.one * thickness;
+			br += Vector2.one * thickness;
+			tr += Vector2.new(1, -1) * thickness;
+			bl += Vector2.new(-1, 1) * thickness;
+		end
 		
 		do
 			local rot = widget.Rotation;
@@ -194,10 +199,10 @@ local function mainFunc(widget: GuiObject, id: string, properties: {}, userdata)
 		end
 		
 		parts = drawQuad(
-			camera:ScreenPointToRay(tl.x, tl.y, ZINDEX).Origin,
-			camera:ScreenPointToRay(br.x, br.y, ZINDEX).Origin,
-			camera:ScreenPointToRay(tr.x, tr.y, ZINDEX).Origin,
-			camera:ScreenPointToRay(bl.x, bl.y, ZINDEX).Origin,
+			camera:ScreenPointToRay(tl.x, tl.y, zIndex).Origin,
+			camera:ScreenPointToRay(br.x, br.y, zIndex).Origin,
+			camera:ScreenPointToRay(tr.x, tr.y, zIndex).Origin,
+			camera:ScreenPointToRay(bl.x, bl.y, zIndex).Origin,
 			root,
 			parts,
 			properties
@@ -304,7 +309,7 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			end
 			
 			metatable[ID].properties = properties;
-			mt.UIBlur = {mainFunc(widget, ID, properties, userdata)};
+			mt.UIBlur = {mainFunc(widget, ID, .01, properties, userdata)};
 		elseif k == "UIGlow" then
 			for k, v in next, v do
 				if v == nil then continue end
@@ -337,7 +342,7 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			blur.Enabled = true;
 			
 			local baseProperties = {
-				Transparency = 1 - v.Intensity;
+				Transparency = math.clamp(1 - v.Intensity, .011, 1);
 				Material = Enum.Material.Neon;
 				Name = "UIGlow";
 			}
@@ -353,7 +358,12 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			end
 			
 			metatable[ID].properties = properties;
-			mt.UIGlow = {mainFunc(widget, ID, properties, userdata)};
+			mt.UIGlow = {mainFunc(widget, ID, .01, {
+				Transparency = .999;
+				Material = Enum.Material.Glass;
+				Name = "UIGlow";
+			}, userdata)}
+			mt.UIGlow = {mainFunc(widget, ID, .011, properties, userdata)};
 		else
 			widget[k] = v;
 		end
