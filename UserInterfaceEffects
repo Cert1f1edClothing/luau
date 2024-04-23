@@ -318,16 +318,10 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			end
 			
 			local mt = metatable[ID] or {};
-			local blur = mt.Blur or newBlur(ID);
 			
-			mt.Blur = blur;
 			metatable[ID] = mt;
 			
 			if not self.Glow.Enabled then
-				if blur then
-					blur.Enabled = false;
-				end
-				
 				local root: Folder = mt.root;
 				
 				if typeof(root) == "Instance" then
@@ -337,9 +331,6 @@ local function main(widget: GuiObject): UserInterfaceEffects
 				metatable[ID].root = true;
 				return
 			end
-			
-			blur.NearIntensity = math.clamp(self.Glow.Intensity, 0, 1);
-			blur.Enabled = true;
 			
 			local baseProperties = {
 				Transparency = math.clamp(1 - v.Intensity, .011, 1);
@@ -359,7 +350,7 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			
 			metatable[ID].properties = properties;
 			mt.UIGlow = {mainFunc(widget, ID, .01, 0, {
-				Transparency = .999;
+				Transparency = .99999;
 				Material = Enum.Material.Glass;
 				Name = "UIGlow";
 			}, userdata)}
