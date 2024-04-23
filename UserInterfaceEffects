@@ -29,7 +29,7 @@ local function newBlur(id: string): DepthOfFieldEffect
 	blur.FocusDistance = 1.5;
 	blur.InFocusRadius = 0;
 	blur.NearIntensity = 0;
-	blur.Name = "UserInterfaceEffects.DepthOfFieldEffect_"..id;
+	blur.Name = "UserInterfaceEffects.DepthOfFieldEffect."..id;
 	blur.Parent = Lighting;
 	return blur;
 end
@@ -117,7 +117,6 @@ end
 
 local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness: number, properties: {}, userdata): {WedgePart}
 	local metatable = getmetatable(userdata);
-	
 	local mt = metatable[id] or {};
 	
 	metatable[id] = mt;
@@ -125,22 +124,21 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 	local parts = mt[properties.Name] and unpack(mt[properties.Name]) or {};
 	
 	local function func(): any
-		local root: Folder;
-		
-		root = mt.root;
+		local root = mt.root;
 		
 		if root == true then
 			return true;
 		elseif not root then
 			root = Instance.new("Folder");
-			root.Name = "UserInterfaceEffects."..widget.ClassName.."_"..id;
-		elseif not widget then
+			root.Name = "UserInterfaceEffects."..widget.ClassName.."."..id;
+			metatable[id].root = root;
+		end
+		
+		if not widget then
 			return true
 		elseif not widget.Visible then
 			return root;
 		end
-		
-		metatable[id].root = root;
 		
 		local tl = widget.AbsolutePosition;
 		local br = tl + widget.AbsoluteSize;
@@ -212,21 +210,12 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 	cnn = RunService.RenderStepped:Connect(function()
 		local output = func();
 		
-		if typeof(output) == "Instance" then return end
-		
-		if output then
-			cnn:Disconnect();
-		end
-	end)
-	
-	local cnn: RBXScriptConnection;
-	cnn = RunService.Heartbeat:Connect(function()
-		local output = func();
-		
 		if typeof(output) == "Instance" then
 			for _, part: WedgePart in ipairs(output:GetChildren()) do
 				part.Parent = nil;
 			end
+		elseif output then
+			cnn:Disconnect();
 		end
 	end)
 	
