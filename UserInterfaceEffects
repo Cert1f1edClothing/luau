@@ -4,12 +4,14 @@ type UserInterfaceEffects = {
 	UIBlur: {
 		Intensity: number;
 		Thickness: number;
+		ZIndex: number;
 		Enabled: boolean;
 		properties: WedgePart;
 	},
 	UIGlow: {
 		Intensity: number;
 		Thickness: number;
+		ZIndex: number;
 		Enabled: boolean;
 		properties: WedgePart;
 	}
@@ -132,9 +134,8 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 			root = Instance.new("Folder");
 			root.Name = "UserInterfaceEffects."..widget.ClassName.."."..id;
 			metatable[id].root = root;
-		end
-		
-		if not widget then
+			return root;
+		elseif not widget then
 			return true
 		elseif not widget.Visible then
 			return root;
@@ -230,11 +231,13 @@ local function main(widget: GuiObject): UserInterfaceEffects
 	metatable.Blur = {
 		Intensity = 0;
 		Thickness = 0;
+		ZIndex = 0;
 		Enabled = true;
 	}
 	metatable.Glow = {
 		Intensity = 0;
 		Thickness = 1;
+		ZIndex = 0;
 		Enabled = true;
 	}
 	
@@ -291,7 +294,7 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			end
 			
 			metatable[ID].properties = properties;
-			mt.UIBlur = {mainFunc(widget, ID, .01, self.Blur.Thickness, properties, userdata)};
+			mt.UIBlur = {mainFunc(widget, ID, .01 + self.Blur.ZIndex, self.Blur.Thickness, properties, userdata)};
 		elseif k == "UIGlow" then
 			for k, v in next, v do
 				if self.Glow[k] then
@@ -331,12 +334,15 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			end
 			
 			metatable[ID].properties = properties;
-			mt.UIGlow = {mainFunc(widget, ID, .01, 0, {
+			
+			local ZINDEX = self.Glow.ZIndex;
+			
+			mt.UIGlow = {mainFunc(widget, ID, .01 + ZINDEX, 0, {
 				Transparency = .99999;
 				Material = Enum.Material.Glass;
 				Name = "UIGlow";
 			}, userdata)}
-			mt.UIGlow = {mainFunc(widget, ID, .011, self.Glow.Thickness, properties, userdata)};
+			mt.UIGlow = {mainFunc(widget, ID, .011 + ZINDEX, self.Glow.Thickness, properties, userdata)};
 		end
 	end
 	
