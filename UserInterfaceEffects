@@ -139,6 +139,16 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 			return true
 		elseif not widget.Visible then
 			return root;
+		else
+			local temp = widget.Parent;
+			
+			while temp and temp:IsA("GuiObject") do
+				if temp.Visible then
+					temp = temp.Parent;
+				else
+					return root;
+				end
+			end
 		end
 		
 		local tl = widget.AbsolutePosition;
