@@ -149,6 +149,10 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 					return root;
 				end
 			end
+			
+			if not temp.Enabled then
+				return root
+			end
 		end
 		
 		local tl = widget.AbsolutePosition;
@@ -173,7 +177,7 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 				temp = temp.Parent;
 			end
 			
-			if rot % 90 ~= 0 then
+			if rot % 180 ~= 0 then
 				rot *= math.pi / 180;
 
 				local sin, cos = math.sin(rot), math.cos(rot);
