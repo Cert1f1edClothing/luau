@@ -73,17 +73,17 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 		local back = edge.direction0.Unit;
 		
 		local cf1 = CFrame.new(
-			p1.x, p1.y, p1.z,
-			-right.x, up.x, back.x,
-			-right.y, up.y, back.y,
-			-right.z, up.z, back.z
+			p1.X, p1.y, p1.z,
+			-right.X, up.X, back.X,
+			-right.Y, up.Y, back.Y,
+			-right.Z, up.Z, back.Z
 		);
 		
 		local cf2 = CFrame.new(
-			p2.x, p2.y, p2.z,
-			right.x, up.x, -back.x,
-			right.y, up.y, -back.y,
-			right.z, up.z, -back.z
+			p2.X, p2.y, p2.z,
+			right.X, up.X, -back.X,
+			right.Y, up.Y, -back.Y,
+			right.Z, up.Z, -back.Z
 		);
 		
 		local wedge1 = part1 or wedge:Clone();
@@ -157,7 +157,7 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 		
 		local tl = widget.AbsolutePosition;
 		local br = tl + widget.AbsoluteSize;
-		local tr, bl = Vector2.new(br.x, tl.y), Vector2.new(tl.x, br.y);
+		local tr, bl = Vector2.new(br.X, tl.Y), Vector2.new(tl.X, br.Y);
 		
 		if properties.Material and properties.Material == Enum.Material.Neon then
 			tl -= Vector2.one * thickness;
@@ -184,23 +184,23 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 				local med = (tr + bl) / 2;
 
 				tl = Vector2.new(
-					cos * (tl.x - med.x) - sin * (tl.y - med.y),
-					sin * (tl.x - med.x) + cos * (tl.y - med.y)
+					cos * (tl.X - med.X) - sin * (tl.Y - med.Y),
+					sin * (tl.X - med.X) + cos * (tl.Y - med.Y)
 				) + med;
 
 				br = Vector2.new(
-					cos * (br.x - med.x) - sin * (br.y - med.y),
-					sin * (br.x - med.x) + cos * (br.y - med.y)
+					cos * (br.X - med.X) - sin * (br.Y - med.Y),
+					sin * (br.X - med.X) + cos * (br.Y - med.Y)
 				) + med;
 
 				tr = Vector2.new(
-					cos * (tr.x - med.x) - sin * (tr.y - med.y),
-					sin * (tr.x - med.x) + cos * (tr.y - med.y)
+					cos * (tr.X - med.X) - sin * (tr.Y - med.Y),
+					sin * (tr.X - med.X) + cos * (tr.Y - med.Y)
 				) + med;
 
 				bl = Vector2.new(
-					cos * (bl.x - med.x) - sin * (bl.y - med.y),
-					sin * (bl.x - med.x) + cos * (bl.y - med.y)
+					cos * (bl.X - med.X) - sin * (bl.Y - med.Y),
+					sin * (bl.X - med.X) + cos * (bl.Y - med.Y)
 				) + med;
 			end
 		end
@@ -208,10 +208,10 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 		local camera = workspace.CurrentCamera;
 		
 		parts = drawQuad(
-			camera:ScreenPointToRay(tl.x, tl.y, zIndex).Origin,
-			camera:ScreenPointToRay(br.x, br.y, zIndex).Origin,
-			camera:ScreenPointToRay(tr.x, tr.y, zIndex).Origin,
-			camera:ScreenPointToRay(bl.x, bl.y, zIndex).Origin,
+			camera:ScreenPointToRay(tl.X, tl.Y, zIndex).Origin,
+			camera:ScreenPointToRay(br.X, br.Y, zIndex).Origin,
+			camera:ScreenPointToRay(tr.X, tr.Y, zIndex).Origin,
+			camera:ScreenPointToRay(bl.X, bl.Y, zIndex).Origin,
 			root,
 			parts,
 			properties
@@ -308,6 +308,9 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			end
 			
 			metatable[ID].properties = properties;
+			
+			if mt.UIBlur then return end
+			
 			mt.UIBlur = {mainFunc(widget, ID, .01 + self.Blur.ZIndex, self.Blur.Thickness, properties, userdata)};
 		elseif k == "UIGlow" then
 			for k, v in next, v do
@@ -349,14 +352,32 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			
 			metatable[ID].properties = properties;
 			
+			if mt.UIGlow then return end
+			
 			local ZINDEX = self.Glow.ZIndex;
 			
-			mt.UIGlow = {mainFunc(widget, ID, .01 + ZINDEX, 0, {
-				Transparency = .99999;
-				Material = Enum.Material.Glass;
-				Name = "UIGlow";
-			}, userdata)}
-			mt.UIGlow = {mainFunc(widget, ID, .011 + ZINDEX, self.Glow.Thickness, properties, userdata)};
+			mt.UIGlow = {
+				mainFunc(
+					widget,
+					ID,
+					.01 + ZINDEX,
+					0,
+					{
+						Transparency = .99999;
+						Material = Enum.Material.Glass;
+						Name = "UIGlow";
+					},
+					userdata
+				),
+				mainFunc(
+					widget,
+					ID,
+					.011 + ZINDEX,
+					self.Glow.Thickness,
+					properties,
+					userdata
+				)
+			}
 		end
 	end
 	
