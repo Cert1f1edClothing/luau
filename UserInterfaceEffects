@@ -2,16 +2,16 @@
 
 type UserInterfaceEffects = {
 	UIBlur: {
-		IntensitY: number;
+		Intensity: number;
 		Thickness: number;
-		ZIndeX: number;
+		ZIndex: number;
 		Enabled: boolean;
 		properties: WedgePart;
 	},
 	UIGlow: {
-		IntensitY: number;
+		Intensity: number;
 		Thickness: number;
-		ZIndeX: number;
+		ZIndex: number;
 		Enabled: boolean;
 		properties: WedgePart;
 	}
@@ -27,10 +27,10 @@ local RunService = game:GetService("RunService");
 local function newBlur(id: string): DepthOfFieldEffect
 	local blur = Instance.new("DepthOfFieldEffect");
 
-	blur.FarIntensitY = 0;
+	blur.FarIntensity = 0;
 	blur.FocusDistance = 1.5;
 	blur.InFocusRadius = 0;
-	blur.NearIntensitY = 0;
+	blur.NearIntensity = 0;
 	blur.Name = "UserInterfaceEffects.DepthOfFieldEffect."..id;
 	blur.Parent = Lighting;
 	return blur;
@@ -73,17 +73,17 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 		local back = edge.direction0.Unit;
 
 		local cf1 = CFrame.new(
-			p1.X, p1.Y, p1.z,
+			p1.X, p1.Y, p1.Z,
 			-right.X, up.X, back.X,
 			-right.Y, up.Y, back.Y,
-			-right.z, up.z, back.z
+			-right.Z, up.Z, back.Z
 		);
 
 		local cf2 = CFrame.new(
-			p2.X, p2.Y, p2.z,
+			p2.X, p2.Y, p2.Z,
 			right.X, up.X, -back.X,
 			right.Y, up.Y, -back.Y,
-			right.z, up.z, -back.z
+			right.Z, up.Z, -back.Z
 		);
 
 		local wedge1 = part1 or wedge:Clone();
@@ -243,15 +243,15 @@ local function main(widget: GuiObject): UserInterfaceEffects
 	metatable.__indeX = metatable;
 
 	metatable.Blur = {
-		IntensitY = 0;
+		Intensity = 0;
 		Thickness = 0;
-		ZIndeX = 0;
+		ZIndex = 0;
 		Enabled = true;
 	}
 	metatable.Glow = {
-		IntensitY = 0;
+		Intensity = 0;
 		Thickness = 1;
-		ZIndeX = 0;
+		ZIndex = 0;
 		Enabled = true;
 	}
 
