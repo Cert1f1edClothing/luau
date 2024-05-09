@@ -4,14 +4,12 @@ type UserInterfaceEffects = {
 	UIBlur: {
 		Intensity: number;
 		Thickness: number;
-		ZIndex: number;
 		Enabled: boolean;
 		properties: WedgePart;
 	},
 	UIGlow: {
 		Intensity: number;
 		Thickness: number;
-		ZIndex: number;
 		Enabled: boolean;
 		properties: WedgePart;
 	}
@@ -26,7 +24,7 @@ local RunService = game:GetService("RunService");
 
 local function newBlur(id: string): DepthOfFieldEffect
 	local blur = Instance.new("DepthOfFieldEffect");
-	
+
 	blur.FarIntensity = 0;
 	blur.FocusDistance = 1.5;
 	blur.InFocusRadius = 0;
@@ -38,81 +36,81 @@ end
 
 local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instance, {}, {}) -> ({}); do
 	local wedge = Instance.new("WedgePart");
-	
+
 	wedge.Anchored = true;
 	wedge.CanCollide = false;
 	wedge.CastShadow = false;
 	wedge.TopSurface = Enum.SurfaceType.Smooth;
 	wedge.BottomSurface = Enum.SurfaceType.Smooth;
-	
+
 	function drawTriangle(a, b, c, part1, part2): (WedgePart, WedgePart)
 		local edges = {
 			{direction0 = (c - a), direction1 = (b - a), origin = a},
 			{direction0 = (a - b), direction1 = (c - b), origin = b},
 			{direction0 = (b - c), direction1 = (a - c), origin = c}
 		}
-		
+
 		local edge = edges[1];
-		
+
 		for i = 2, #edges do
 			if (edges[i].direction0.Magnitude > edge.direction0.Magnitude) then
 				edge = edges[i];
 			end
 		end
-		
+
 		local theta = math.acos(edge.direction0.Unit:Dot(edge.direction1.Unit));
 		local w1 = math.cos(theta) * edge.direction1.Magnitude;
 		local w2 = edge.direction0.Magnitude - w1;
 		local h = math.sin(theta) * edge.direction1.Magnitude;
-		
+
 		local p1 = edge.origin + edge.direction1 * .5;
 		local p2 = edge.origin + edge.direction0 + (edge.direction1 - edge.direction0) * .5;
-		
+
 		local right = edge.direction0:Cross(edge.direction1).Unit;
 		local up = right:Cross(edge.direction0).Unit;
 		local back = edge.direction0.Unit;
-		
+
 		local cf1 = CFrame.new(
 			p1.X, p1.y, p1.z,
 			-right.X, up.X, back.X,
 			-right.Y, up.Y, back.Y,
 			-right.Z, up.Z, back.Z
 		);
-		
+
 		local cf2 = CFrame.new(
 			p2.X, p2.y, p2.z,
 			right.X, up.X, -back.X,
 			right.Y, up.Y, -back.Y,
 			right.Z, up.Z, -back.Z
 		);
-		
+
 		local wedge1 = part1 or wedge:Clone();
-		
+
 		wedge1.Size = Vector3.new(0, h, w1);
 		wedge1.CFrame = cf1;
-		
+
 		local wedge2 = part2 or wedge:Clone();
-		
+
 		wedge2.Size = Vector3.new(0, h, w2);
 		wedge2.CFrame = cf2;
-		
+
 		return wedge1, wedge2;
 	end
-	
+
 	function drawQuad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instance, parts: {}, properties: {}): {}
 		local p1, p2 = drawTriangle(a, c, b, parts[1], parts[2]);
 		local p3, p4 = drawTriangle(b, d, a, parts[3], parts[4]);
-		
+
 		local parts = {p1, p2, p3, p4};
-		
+
 		for _, part: WedgePart in ipairs(parts) do
 			for k, v in next, properties do
 				part[k] = v;
 			end
-			
+
 			part.Parent = parent;
 		end
-		
+
 		return parts;
 	end
 end
@@ -123,7 +121,7 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 	
 	metatable[id] = mt;
 	
-	local parts = mt[properties.Name] and unpack(mt[properties.Name]) or {};
+	local parts = mt[properties.Name] or {};
 	
 	local function func(): any
 		local root = mt.root;
@@ -172,32 +170,32 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 			
 			while true do
 				if not (temp and temp:IsA("GuiObject")) then break end
-
+				
 				rot += temp.Rotation;
 				temp = temp.Parent;
 			end
 			
 			if rot % 180 ~= 0 then
 				rot *= math.pi / 180;
-
+				
 				local sin, cos = math.sin(rot), math.cos(rot);
 				local med = (tr + bl) / 2;
-
+				
 				tl = Vector2.new(
 					cos * (tl.X - med.X) - sin * (tl.Y - med.Y),
 					sin * (tl.X - med.X) + cos * (tl.Y - med.Y)
 				) + med;
-
+				
 				br = Vector2.new(
 					cos * (br.X - med.X) - sin * (br.Y - med.Y),
 					sin * (br.X - med.X) + cos * (br.Y - med.Y)
 				) + med;
-
+				
 				tr = Vector2.new(
 					cos * (tr.X - med.X) - sin * (tr.Y - med.Y),
 					sin * (tr.X - med.X) + cos * (tr.Y - med.Y)
 				) + med;
-
+				
 				bl = Vector2.new(
 					cos * (bl.X - med.X) - sin * (bl.Y - med.Y),
 					sin * (bl.X - med.X) + cos * (bl.Y - med.Y)
@@ -241,126 +239,118 @@ local function main(widget: GuiObject): UserInterfaceEffects
 	local userdata = newproxy(true);
 	local metatable = getmetatable(userdata);
 	metatable.__index = metatable;
-	
+
 	metatable.Blur = {
 		Intensity = 0;
 		Thickness = 0;
-		ZIndex = 0;
 		Enabled = true;
 	}
 	metatable.Glow = {
 		Intensity = 0;
 		Thickness = 1;
-		ZIndex = 0;
 		Enabled = true;
 	}
-	
+
 	local id = tostring(userdata);
-	
+
 	function metatable:__newindex(k: string, v)
 		local ID = k.."."..id;
-		
+
 		if k == "UIBlur" then
 			for k, v in next, v do
-				if self.Blur[k] then
-					self.Blur[k] = v;
-				end
+				self.Blur[k] = v;
 			end
-			
+
 			local mt = metatable[ID] or {};
 			local blur = mt.Blur or newBlur(ID);
-			
+
 			mt.Blur = blur;
 			metatable[ID] = mt;
-			
+
 			if not self.Blur.Enabled then
 				if blur then
 					blur.Enabled = false;
 				end
-				
+
 				local root: Folder = mt.root;
-				
+
 				if typeof(root) == "Instance" then
 					root:Destroy();
 				end
-				
+
 				metatable[ID].root = true;
 				return
 			end
-			
+
 			blur.NearIntensity = math.clamp(self.Blur.Intensity, 0, 1);
 			blur.Enabled = true;
-			
+
 			local baseProperties = {
 				Transparency = .99;
 				Material = Enum.Material.Glass;
 				Name = "UIBlur";
 			}
-			
+
 			local properties = mt.properties or baseProperties;
-			
+
 			if v.properties then
 				for k, v in next, v.properties do
-					if baseProperties[k] then break end
-					
+					if baseProperties[k] then continue end
+
 					properties[k] = v;
 				end
 			end
-			
+
 			metatable[ID].properties = properties;
-			
+
 			if mt.UIBlur then return end
-			
-			mt.UIBlur = {mainFunc(widget, ID, .01 + self.Blur.ZIndex, self.Blur.Thickness, properties, userdata)};
+
+			mt.UIBlur = {mainFunc(widget, ID, .01, self.Blur.Thickness, properties, userdata)};
 		elseif k == "UIGlow" then
 			for k, v in next, v do
-				if self.Glow[k] then
-					self.Glow[k] = v;
-				end
+				self.Glow[k] = v;
 			end
-			
+
 			local mt = metatable[ID] or {};
-			
+
 			metatable[ID] = mt;
-			
+
 			if not self.Glow.Enabled then
 				local root: Folder = mt.root;
-				
+
 				if typeof(root) == "Instance" then
 					root:Destroy();
 				end
-				
+
 				metatable[ID].root = true;
 				return
 			end
-			
+
 			local baseProperties = {
 				Transparency = math.clamp(1 - v.Intensity, .011, 1);
 				Material = Enum.Material.Neon;
 				Name = "UIGlow";
 			}
-			
+
 			local properties = mt.properties or baseProperties;
-			
+
 			if v.properties then
 				for k, v in next, v.properties do
-					if baseProperties[k] then break end
-					
+					if baseProperties[k] then continue end
+
 					properties[k] = v;
 				end
 			end
-			
+
 			metatable[ID].properties = properties;
-			
+
 			if mt.UIGlow then return end
-			
-			local ZINDEX = self.Glow.ZIndex;
 			
 			mt.UIGlow = {
 				mainFunc(
 					widget,
 					ID,
-					.01 + ZINDEX,
+					.01,
 					0,
 					{
 						Transparency = .99999;
@@ -372,7 +362,7 @@ local function main(widget: GuiObject): UserInterfaceEffects
 				mainFunc(
 					widget,
 					ID,
-					.011 + ZINDEX,
+					.011,
 					self.Glow.Thickness,
 					properties,
 					userdata
@@ -380,7 +370,7 @@ local function main(widget: GuiObject): UserInterfaceEffects
 			}
 		end
 	end
-	
+
 	return userdata;
 end
 
