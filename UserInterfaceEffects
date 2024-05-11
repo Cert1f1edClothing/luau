@@ -375,4 +375,4 @@ local function main(widget: GuiObject): UserInterfaceEffects
 end
 
 return main;
---Made by Cert1f1edClothing, cert1f1edfailure#0851, hasthetoethethird#2293
+--Made by Cert1f1edClothing
