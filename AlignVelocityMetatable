@@ -1,0 +1,156 @@
+--// TYPES
+
+type AlignVelocityMetatable = {
+	BasePart: BasePart;
+	Attachment: Attachment?;
+	AlignPosition: AlignPosition?;
+	AlignOrientation: AlignOrientation?;
+	CFrame: CFrame;
+	Position: Vector3;
+	Orientation: Vector3;
+	Speed: number;
+	Destroy: (self: AlignVelocityMetatable) -> ();
+};
+
+--// FUNCTIONS
+
+local function main(part: BasePart, speed: number?): AlignVelocityMetatable
+	local userdata: AlignVelocityMetatable = newproxy(true);
+	local metatable: AlignVelocityMetatable = getmetatable(userdata);
+	
+	metatable.BasePart = part;
+	metatable.Speed = speed or 200;
+	
+	function metatable:Destroy()
+		self = getmetatable(self);
+		
+		if self.Attachment then
+			self.Attachment:Destroy();
+		end
+		
+		if self.AlignPosition then
+			self.AlignPosition:Destroy();
+		end
+		
+		if self.AlignOrientation then
+			self.AlignOrientation:Destroy();
+		end
+	end
+	
+	function metatable:__index(k: string)
+		self = getmetatable(self);
+		
+		if k == "CFrame" or k == "Position" or k == "Orientation" then
+			return self[k] or part[k];
+		end
+		
+		return self[k];
+	end
+	
+	local function setPosition(v)
+		if typeof(v) == "CFrame" then
+			v = v.Position;
+		end
+		
+		metatable.Position = v;
+		
+		local alignPosition = metatable.AlignPosition;
+		if alignPosition then
+			alignPosition.Position = v;
+		else
+			alignPosition = Instance.new("AlignPosition");
+			alignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment;
+			alignPosition.Attachment0 = metatable.Attachment;
+			alignPosition.MaxForce = math.huge;
+			alignPosition.MaxVelocity = math.huge;
+			alignPosition.Responsiveness = metatable.Speed;
+			alignPosition.Position = v;
+			alignPosition.Parent = part;
+			metatable.AlignPosition = alignPosition;
+		end
+	end
+	
+	local function setOrientation(v)
+		if typeof(v) == "CFrame" then
+			metatable.Orientation = Vector3.new(v:ToOrientation());
+		else
+			metatable.Orientation = v;
+			v = CFrame.Angles(math.rad(v.X), math.rad(v.Y), math.rad(v.Z));
+		end
+		
+		local alignOrientation = metatable.AlignOrientation;
+		if alignOrientation then
+			alignOrientation.CFrame = v;
+		else
+			alignOrientation = Instance.new("AlignOrientation");
+			alignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment;
+			alignOrientation.Attachment0 = metatable.Attachment;
+			alignOrientation.MaxTorque = math.huge;
+			alignOrientation.MaxAngularVelocity = math.huge;
+			alignOrientation.Responsiveness = metatable.Speed;
+			alignOrientation.CFrame = v;
+			alignOrientation.Parent = part;
+			metatable.AlignOrientation = alignOrientation;
+		end
+	end
+	
+	function metatable:__newindex(k: string, v)
+		self = getmetatable(self);
+		
+		if k == "CFrame" then
+			if typeof(v) == "Vector3" then
+				self.CFrame = CFrame.new(v);
+			else
+				self.CFrame = v;
+			end
+			
+			if not self.Attachment then
+				self.Attachment = Instance.new("Attachment", part);
+			end
+			
+			setPosition(v);
+			setOrientation(v);
+		elseif k == "Position" then
+			if typeof(v) == "CFrame" then
+				self.Position = v.Position;
+			else
+				self.Position = v;
+			end
+			
+			if not self.Attachment then
+				self.Attachment = Instance.new("Attachment", part);
+			end
+			
+			setPosition(v);
+		elseif k == "Orientation" then
+			if typeof(v) == "CFrame" then
+				self.Orientation = Vector3.new(v:ToOrientation());
+			else
+				self.Orientation = v;
+			end
+			
+			if not self.Attachment then
+				self.Attachment = Instance.new("Attachment", part);
+			end
+			
+			setOrientation(v);
+		elseif k == "Speed" then
+			self.Speed = v;
+			
+			if self.AlignPosition then
+				self.AlignPosition.Responsiveness = v;
+			end
+			
+			if self.AlignOrientation then
+				self.AlignOrientation.Responsiveness = v;
+			end
+		else
+			self[k] = v;
+		end
+	end
+	
+	return userdata;
+end
+
+return main;
+--Made by Cert1f1edClothing
