@@ -1,13 +1,16 @@
+--// SERVICES
+
+local AssetService = game:GetService("AssetService");
+
 --// FUNCTIONS
 
 local main: BasePart & (meshId: number) -> Model = newproxy(true); do
-	local AssetService = game:GetService("AssetService");
-	
-	local metatable = getmetatable(main);
 	local wedge = Instance.new("WedgePart");
 	
 	wedge.Anchored = true;
 	wedge.BottomSurface = Enum.SurfaceType.Smooth;
+	
+	local metatable = getmetatable(main);
 	
 	local function drawTriangle(a: Vector3, b: Vector3, c: Vector3, parent: Instance)
 		local edges = {
@@ -63,7 +66,7 @@ local main: BasePart & (meshId: number) -> Model = newproxy(true); do
 		wedge2.Parent = parent;
 	end
 	
-	local function main(_, meshId: number): Model
+	metatable.__call = function(_, meshId: number): Model
 		local model = Instance.new("Model");
 		local editableMesh = AssetService:CreateEditableMeshAsync("rbxassetid://"..tostring(meshId));
 		
@@ -75,12 +78,6 @@ local main: BasePart & (meshId: number) -> Model = newproxy(true); do
 		
 		editableMesh:Destroy();
 		return model;
-	end
-	
-	metatable.__call = main;
-	
-	function metatable.__index(_, k)
-		return wedge[k];
 	end
 	
 	function metatable.__newindex(_, k, v)
