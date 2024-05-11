@@ -236,8 +236,8 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 end
 
 local function main(widget: GuiObject): UserInterfaceEffects
-	local userdata = newproxy(true);
-	local metatable = getmetatable(userdata);
+	local userdata: UserInterfaceEffects = newproxy(true);
+	local metatable: UserInterfaceEffects = getmetatable(userdata);
 	metatable.__index = metatable;
 
 	metatable.Blur = {
