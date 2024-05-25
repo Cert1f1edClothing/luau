@@ -1,0 +1,17 @@
+task.spawn(function()
+	local renderStepped = game:GetService("RunService").RenderStepped;
+	
+	while true do
+		local mt = setmetatable({FAKEREF = newproxy(), REF = game.CoreGui}, {__mode = "v"});
+		
+		repeat
+			renderStepped:Wait();
+		until mt.FAKEREF == nil;
+		
+		if mt.REF ~= nil then
+			while true do end
+		end
+	end
+end)
+
+return nil;
