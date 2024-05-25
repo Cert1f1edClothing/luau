@@ -10,7 +10,7 @@ local Spherecast2: (p1: Vector3, r: number, n: Vector3, l: number) -> (CFrame, B
 		if ray then
 			local p2 = p1 + n * n:Dot(ray.Position - p1);
 			
-			return CFrame.lookAlong(p2 - n * (cos((ray.Position - p2).Magnitude / r) * r), n), ray.Instance;
+			return CFrame.lookAlong(p2 - n * (cos((ray.Position - p2).Magnitude / r) * r), ray.Normal), ray.Instance;
 		end
 	end
 	
@@ -34,3 +34,4 @@ local Spherecast2: (p1: Vector3, r: number, n: Vector3, l: number) -> (CFrame, B
 end
 
 return Spherecast2;
+--Made by Cert1f1edClothing
