@@ -1,0 +1,36 @@
+--// FUNCTIONS
+
+local Spherecast2: (p1: Vector3, r: number, n: Vector3, l: number) -> (CFrame, BasePart)?; do
+	local workspace = workspace;
+	local cos = math.cos;
+	local floor = math.floor;
+	
+	local function main(p1: Vector3, r: number, n: Vector3, l: number, i: number, j: number)
+		local ray = workspace:Spherecast(p1 + n * i, r, n * j);
+		if ray then
+			local p2 = p1 + n * n:Dot(ray.Position - p1);
+			
+			return CFrame.lookAlong(p2 - n * (cos((ray.Position - p2).Magnitude / r) * r), n), ray.Instance;
+		end
+	end
+	
+	function Spherecast2(p1: Vector3, r: number, n: Vector3, l: number)
+		for i = 0, l - 0x400, 0x400 do
+			local cf, hit = main(p1, r, n, l, i, 0x400);
+			if cf and hit then
+				return cf, hit;
+			end
+		end
+		
+		local j = floor(l / 0x400) * 0x400;
+		
+		if l - j == 0 then return end
+		
+		local cf, hit = main(p1, r, n, l, j, l - j);
+		if cf and hit then
+			return cf, hit;
+		end
+	end
+end
+
+return Spherecast2;
