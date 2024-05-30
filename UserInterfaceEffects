@@ -165,20 +165,13 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 		end
 		
 		do
-			local rot = widget.Rotation;
-			local temp = widget.Parent;
-			
-			while true do
-				if not (temp and temp:IsA("GuiObject")) then break end
-				
-				rot += temp.Rotation;
-				temp = temp.Parent;
-			end
+			local rot = widget.AbsoluteRotation;
 			
 			if rot % 180 ~= 0 then
 				rot *= math.pi / 180;
 				
-				local sin, cos = math.sin(rot), math.cos(rot);
+				local sin = math.sin(rot);
+				local cos = math.cos(rot);
 				local med = (tr + bl) / 2;
 				
 				tl = Vector2.new(
