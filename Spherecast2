@@ -1,6 +1,6 @@
 --// FUNCTIONS
 
-local Spherecast2: (p1: Vector3, r: number, d: Vector3, l: number) -> (CFrame, BasePart)?; do
+local Spherecast2: (origin: Vector3, radius: number, direction: Vector3, length: number) -> (CFrame, BasePart)?; do
 	local workspace = workspace;
 	local cos = math.cos;
 	local floor = math.floor;
