@@ -8,18 +8,16 @@ type AlignVelocityMetatable = {
 	CFrame: CFrame;
 	Position: Vector3;
 	Orientation: Vector3;
-	Speed: number;
 	Destroy: (self: AlignVelocityMetatable) -> ();
 };
 
 --// FUNCTIONS
 
-local function main(part: BasePart, speed: number?): AlignVelocityMetatable
+local function main(part: BasePart): AlignVelocityMetatable
 	local userdata: AlignVelocityMetatable = newproxy(true);
 	local metatable: AlignVelocityMetatable = getmetatable(userdata);
 	
 	metatable.BasePart = part;
-	metatable.Speed = speed or 200;
 	
 	function metatable:Destroy()
 		self = getmetatable(self);
@@ -63,7 +61,7 @@ local function main(part: BasePart, speed: number?): AlignVelocityMetatable
 			alignPosition.Attachment0 = metatable.Attachment;
 			alignPosition.MaxForce = math.huge;
 			alignPosition.MaxVelocity = math.huge;
-			alignPosition.Responsiveness = metatable.Speed;
+			alignPosition.Responsiveness = 200;
 			alignPosition.Position = v;
 			alignPosition.Parent = part;
 			metatable.AlignPosition = alignPosition;
@@ -87,7 +85,7 @@ local function main(part: BasePart, speed: number?): AlignVelocityMetatable
 			alignOrientation.Attachment0 = metatable.Attachment;
 			alignOrientation.MaxTorque = math.huge;
 			alignOrientation.MaxAngularVelocity = math.huge;
-			alignOrientation.Responsiveness = metatable.Speed;
+			alignOrientation.Responsiveness = 200;
 			alignOrientation.CFrame = v;
 			alignOrientation.Parent = part;
 			metatable.AlignOrientation = alignOrientation;
@@ -134,16 +132,6 @@ local function main(part: BasePart, speed: number?): AlignVelocityMetatable
 			end
 			
 			setOrientation(v);
-		elseif k == "Speed" then
-			self.Speed = v;
-			
-			if self.AlignPosition then
-				self.AlignPosition.Responsiveness = v;
-			end
-			
-			if self.AlignOrientation then
-				self.AlignOrientation.Responsiveness = v;
-			end
 		else
 			self[k] = v;
 		end
