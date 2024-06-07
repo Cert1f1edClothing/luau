@@ -5,18 +5,18 @@ local Spherecast2: (origin: Vector3, radius: number, direction: Vector3, length:
 	local cos = math.cos;
 	local floor = math.floor;
 	
-	local function main(p1: Vector3, r: number, d: Vector3, l: number, i: number, j: number)
-		local ray = workspace:Spherecast(p1 + d * i, r, d * j);
+	local function main(p: Vector3, r: number, d: Vector3, l: number, i: number, j: number)
+		local ray = workspace:Spherecast(p + d * i, r, d * j);
 		if ray then
-			local p2 = p1 + d * d:Dot(ray.Position - p1);
+			local p2 = p + d * d:Dot(ray.Position - p);
 			
 			return CFrame.lookAlong(p2 - d * (cos((ray.Position - p2).Magnitude / r) * r), -ray.Normal), ray.Instance;
 		end
 	end
 	
-	function Spherecast2(p1: Vector3, r: number, d: Vector3, l: number)
+	function Spherecast2(p: Vector3, r: number, d: Vector3, l: number)
 		for i = 0, l - 0x400, 0x400 do
-			local cf, hit = main(p1, r, d, l, i, 0x400);
+			local cf, hit = main(p, r, d, l, i, 0x400);
 			if cf and hit then
 				return cf, hit;
 			end
@@ -26,7 +26,7 @@ local Spherecast2: (origin: Vector3, radius: number, direction: Vector3, length:
 		
 		if l - j == 0 then return end
 		
-		local cf, hit = main(p1, r, d, l, j, l - j);
+		local cf, hit = main(p, r, d, l, j, l - j);
 		if cf and hit then
 			return cf, hit;
 		end
