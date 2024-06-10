@@ -1,6 +1,6 @@
 --// TYPES
 
-type AlignVelocityMetatable = {
+type AVMT = {
 	BasePart: BasePart;
 	Attachment: Attachment?;
 	AlignPosition: AlignPosition?;
@@ -8,14 +8,14 @@ type AlignVelocityMetatable = {
 	CFrame: CFrame;
 	Position: Vector3;
 	Orientation: Vector3;
-	Destroy: (self: AlignVelocityMetatable) -> ();
+	Destroy: (self: AVMT) -> ();
 };
 
 --// FUNCTIONS
 
-local function main(part: BasePart): AlignVelocityMetatable
-	local userdata: AlignVelocityMetatable = newproxy(true);
-	local metatable: AlignVelocityMetatable = getmetatable(userdata);
+local function AlignVelocityMetatable(part: BasePart): AVMT
+	local userdata: AVMT = newproxy(true);
+	local metatable: AVMT = getmetatable(userdata);
 	
 	metatable.BasePart = part;
 	
@@ -140,5 +140,5 @@ local function main(part: BasePart): AlignVelocityMetatable
 	return userdata;
 end
 
-return main;
+return AlignVelocityMetatable;
 --Made by Cert1f1edClothing
