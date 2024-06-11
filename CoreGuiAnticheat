@@ -13,6 +13,4 @@ task.spawn(function()
 		end
 	end
 end)
-
-return nil;
 --Made by Cert1f1edClothing
