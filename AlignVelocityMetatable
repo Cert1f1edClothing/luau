@@ -1,5 +1,3 @@
---// TYPES
-
 type AVMT = {
 	BasePart: BasePart;
 	Attachment: Attachment?;
@@ -10,8 +8,6 @@ type AVMT = {
 	Orientation: Vector3;
 	Destroy: (self: AVMT) -> ();
 };
-
---// FUNCTIONS
 
 local function AlignVelocityMetatable(part: BasePart): AVMT
 	local userdata: AVMT = newproxy(true);
