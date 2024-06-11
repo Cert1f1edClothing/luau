@@ -1,5 +1,3 @@
---// FUNCTIONS
-
 local Spherecast2: (origin: Vector3, radius: number, direction: Vector3, length: number) -> (CFrame, BasePart)?; do
 	local workspace = workspace;
 	local cos = math.cos;
