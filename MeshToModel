@@ -1,10 +1,6 @@
---// SERVICES
-
-local AssetService = game:GetService("AssetService");
-
---// FUNCTIONS
-
 local MeshToModel: BasePart & (meshId: number) -> Model = newproxy(true); do
+	local AssetService = game:GetService("AssetService");
+	
 	local wedge = Instance.new("WedgePart");
 
 	wedge.Anchored = true;
