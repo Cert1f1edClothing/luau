@@ -1,7 +1,5 @@
 local Spherecast2: (origin: Vector3, radius: number, direction: Vector3, length: number, params: RaycastParams) -> (CFrame, BasePart)?; do
-	local workspace = workspace;
 	local cos = math.cos;
-	local floor = math.floor;
 
 	local function main(p: Vector3, r: number, d: Vector3, l: number, i: number, j: number, params: RaycastParams)
 		local ray = workspace:Spherecast(p + d * i, r, d * j, params);
@@ -20,7 +18,7 @@ local Spherecast2: (origin: Vector3, radius: number, direction: Vector3, length:
 			end
 		end
 
-		local j = floor(l / 0x400) * 0x400;
+		local j = l - l % 0x400;
 
 		if l - j == 0 then return end
 
