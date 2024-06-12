@@ -1,12 +1,12 @@
 local Spherecast2: (origin: Vector3, radius: number, direction: Vector3, length: number, params: RaycastParams) -> (CFrame, BasePart)?; do
-	local cos = math.cos;
+	local mathCos = math.cos;
 
 	local function main(p: Vector3, r: number, d: Vector3, l: number, i: number, j: number, params: RaycastParams)
 		local ray = workspace:Spherecast(p + d * i, r, d * j, params);
 		if ray then
 			local p2 = p + d * d:Dot(ray.Position - p);
 
-			return CFrame.lookAlong(p2 - d * (cos((ray.Position - p2).Magnitude / r) * r), -ray.Normal), ray.Instance;
+			return CFrame.lookAlong(p2 - d * (mathCos((ray.Position - p2).Magnitude / r) * r), -ray.Normal), ray.Instance;
 		end
 	end
 
