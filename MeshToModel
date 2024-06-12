@@ -1,12 +1,12 @@
 local MeshToModel: BasePart & (meshId: number) -> Model = newproxy(true); do
-	local AssetService = game:GetService("AssetService");
-	
 	local wedge = Instance.new("WedgePart");
 
 	wedge.Anchored = true;
 	wedge.BottomSurface = Enum.SurfaceType.Smooth;
 
 	local metatable = getmetatable(MeshToModel);
+
+	local AssetService = game:GetService("AssetService");
 
 	local function drawTriangle(a: Vector3, b: Vector3, c: Vector3, parent: Instance)
 		local edges = {
