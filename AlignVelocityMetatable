@@ -10,15 +10,15 @@ type AlignVelocityMetatable = {
 };
 
 local AlignVelocityMetatable: AlignVelocityMetatable; do
-	local MATH_HUGE = math.huge;
-	local MATH_PI = math.pi;
-	local ENUM_POSITION_ALIGNMENT_MODE = Enum.PositionAlignmentMode.OneAttachment;
-	local ENUM_ORIENTATION_ALIGNMENT_MODE = Enum.OrientationAlignmentMode.OneAttachment;
-	
 	local instanceNew = Instance.new;
 	local vector3New = Vector3.new;
 	local cframeNew = CFrame.new;
 	local cframeAngles = CFrame.Angles;
+	
+	local MATH_HUGE = math.huge;
+	local MATH_PI = math.pi;
+	local ENUM_POSITION_ALIGNMENT_MODE = Enum.PositionAlignmentMode.OneAttachment;
+	local ENUM_ORIENTATION_ALIGNMENT_MODE = Enum.OrientationAlignmentMode.OneAttachment;
 	
 	function AlignVelocityMetatable(part: BasePart): AlignVelocityMetatable
 		local userdata: AlignVelocityMetatable = newproxy(true);
