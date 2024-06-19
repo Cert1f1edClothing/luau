@@ -74,12 +74,12 @@ local AlignVelocityMetatable: AlignVelocityMetatable; do
 		end
 	
 		local function setOrientation(v)
-			if typeof(v) == "CFrame" then
-				metatable.Orientation = vector3New(v:ToOrientation());
-			elseif type(v) == "vector" then
+			if type(v) == "vector" then
 				metatable.Orientation = v;
 				v *= MATH_PI / 180;
 				v = cframeAngles(v.X, v.Y, v.Z);
+			else
+				metatable.Orientation = vector3New(v:ToOrientation());
 			end
 	
 			local alignOrientation = metatable.AlignOrientation;
@@ -102,11 +102,7 @@ local AlignVelocityMetatable: AlignVelocityMetatable; do
 			self = getmetatable(self);
 	
 			if k == "CFrame" then
-				if typeof(v) == "Vector3" then
-					self.CFrame = cframeNew(v);
-				else
-					self.CFrame = v;
-				end
+				self.CFrame = typeof(v) == "Vector3" and cframeNew(v) or v;
 	
 				if not self.Attachment then
 					self.Attachment = instanceNew("Attachment", part);
@@ -115,11 +111,7 @@ local AlignVelocityMetatable: AlignVelocityMetatable; do
 				setPosition(v);
 				setOrientation(v);
 			elseif k == "Position" then
-				if typeof(v) == "CFrame" then
-					self.Position = v.Position;
-				else
-					self.Position = v;
-				end
+				self.Position = typeof(v) == "CFrame" and v.Position or v;
 	
 				if not self.Attachment then
 					self.Attachment = instanceNew("Attachment", part);
@@ -127,11 +119,7 @@ local AlignVelocityMetatable: AlignVelocityMetatable; do
 	
 				setPosition(v);
 			elseif k == "Orientation" then
-				if typeof(v) == "CFrame" then
-					self.Orientation = vector3New(v:ToOrientation());
-				else
-					self.Orientation = v;
-				end
+				self.Orientation = typeof(v) == "CFrame" and vector3New(v:ToOrientation()) or v;
 	
 				if not self.Attachment then
 					self.Attachment = instanceNew("Attachment", part);
