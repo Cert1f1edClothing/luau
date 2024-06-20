@@ -4,9 +4,10 @@ local MeshToModel: BasePart & (meshId: number) -> Model = newproxy(true); do
 	wedge.Anchored = true;
 	wedge.BottomSurface = Enum.SurfaceType.Smooth;
 
-	local metatable = getmetatable(MeshToModel);
-
 	local AssetService = game:GetService("AssetService");
+
+	local metatable = getmetatable(MeshToModel);
+	local vector3New = Vector3.new;
 
 	local function drawTriangle(a: Vector3, b: Vector3, c: Vector3, parent: Instance)
 		local edges = {
@@ -51,13 +52,13 @@ local MeshToModel: BasePart & (meshId: number) -> Model = newproxy(true); do
 
 		local wedge1 = wedge:Clone();
 
-		wedge1.Size = Vector3.new(0, h, w1);
+		wedge1.Size = vector3New(0, h, w1);
 		wedge1.CFrame = cf1;
 		wedge1.Parent = parent;
 
 		local wedge2 = wedge:Clone();
 
-		wedge2.Size = Vector3.new(0, h, w2);
+		wedge2.Size = vector3New(0, h, w2);
 		wedge2.CFrame = cf2;
 		wedge2.Parent = parent;
 	end
