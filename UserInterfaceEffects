@@ -152,10 +152,10 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 		local tr, bl = Vector2.new(br.X, tl.Y), Vector2.new(tl.X, br.Y);
 		
 		if properties.Material and properties.Material == Enum.Material.Neon then
-			tl -= Vector2.one * thickness;
-			br += Vector2.one * thickness;
-			tr += Vector2.new(1, -1) * thickness;
-			bl += Vector2.new(-1, 1) * thickness;
+			tl -= Vector2.new(thickness, thickness);
+			br += Vector2.new(thickness, thickness);
+			tr += Vector2.new(thickness, -thickness);
+			bl += Vector2.new(-thickness, thickness);
 		end
 		
 		do
