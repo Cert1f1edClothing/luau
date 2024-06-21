@@ -7,14 +7,18 @@ local MeshToModel: BasePart & (meshId: number) -> Model = newproxy(true); do
 	local AssetService = game:GetService("AssetService");
 
 	local metatable = getmetatable(MeshToModel);
+	local tableFreeze = table.freeze;
+	local mathSin = math.sin;
+	local mathCos = math.cos;
+	local cframeNew = CFrame.new;
 	local vector3New = Vector3.new;
 
 	local function drawTriangle(a: Vector3, b: Vector3, c: Vector3, parent: Instance)
-		local edges = {
+		local edges = tableFreeze({
 			{direction0 = (c - a), direction1 = (b - a), origin = a},
 			{direction0 = (a - b), direction1 = (c - b), origin = b},
 			{direction0 = (b - c), direction1 = (a - c), origin = c}
-		}
+		})
 
 		local edge = edges[1];
 
@@ -25,9 +29,9 @@ local MeshToModel: BasePart & (meshId: number) -> Model = newproxy(true); do
 		end
 
 		local theta = math.acos(edge.direction0.Unit:Dot(edge.direction1.Unit));
-		local w1 = math.cos(theta) * edge.direction1.Magnitude;
+		local w1 = mathCos(theta) * edge.direction1.Magnitude;
 		local w2 = edge.direction0.Magnitude - w1;
-		local h = math.sin(theta) * edge.direction1.Magnitude;
+		local h = mathSin(theta) * edge.direction1.Magnitude;
 
 		local p1 = edge.origin + edge.direction1 * 0.5;
 		local p2 = edge.origin + edge.direction0 + (edge.direction1 - edge.direction0) * 0.5;
@@ -36,14 +40,14 @@ local MeshToModel: BasePart & (meshId: number) -> Model = newproxy(true); do
 		local up = right:Cross(edge.direction0).Unit;
 		local back = edge.direction0.Unit;
 
-		local cf1 = CFrame.new(
+		local cf1 = CFrameNew(
 			p1.X, p1.Y, p1.Z,
 			-right.X, up.X, back.X,
 			-right.Y, up.Y, back.Y,
 			-right.Z, up.Z, back.Z
 		);
 
-		local cf2 = CFrame.new(
+		local cf2 = CFrameNew(
 			p2.X, p2.Y, p2.Z,
 			right.X, up.X, -back.X,
 			right.Y, up.Y, -back.Y,
