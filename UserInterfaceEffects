@@ -4,17 +4,29 @@ type UserInterfaceEffects = {
 		Thickness: number;
 		Enabled: boolean;
 		properties: WedgePart;
-	},
+	};
 	UIGlow: {
 		Intensity: number;
 		Thickness: number;
 		Enabled: boolean;
 		properties: WedgePart;
-	}
+	};
 }
 
 local Lighting = game:GetService("Lighting");
 local RunService = game:GetService("RunService");
+
+local tableFreeze = table.freeze;
+local mathSin = math.sin;
+local mathCos = math.cos;
+local cframeNew = CFrame.new;
+local vector3New = Vector3.new;
+local vector2New = Vector2.new;
+local mathAcos = math.acos;
+
+local RAD = math.pi / 180;
+
+local priority = 0;
 
 local function newBlur(id: string): DepthOfFieldEffect
 	local blur = Instance.new("DepthOfFieldEffect");
@@ -38,11 +50,11 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 	wedge.BottomSurface = Enum.SurfaceType.Smooth;
 
 	function drawTriangle(a, b, c, part1, part2): (WedgePart, WedgePart)
-		local edges = {
+		local edges = tableFreeze({
 			{direction0 = (c - a), direction1 = (b - a), origin = a},
 			{direction0 = (a - b), direction1 = (c - b), origin = b},
 			{direction0 = (b - c), direction1 = (a - c), origin = c}
-		}
+		})
 
 		local edge = edges[1];
 
@@ -52,10 +64,10 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 			end
 		end
 
-		local theta = math.acos(edge.direction0.Unit:Dot(edge.direction1.Unit));
-		local w1 = math.cos(theta) * edge.direction1.Magnitude;
+		local theta = mathAcos(edge.direction0.Unit:Dot(edge.direction1.Unit));
+		local w1 = mathCos(theta) * edge.direction1.Magnitude;
 		local w2 = edge.direction0.Magnitude - w1;
-		local h = math.sin(theta) * edge.direction1.Magnitude;
+		local h = mathSin(theta) * edge.direction1.Magnitude;
 
 		local p1 = edge.origin + edge.direction1 * .5;
 		local p2 = edge.origin + edge.direction0 + (edge.direction1 - edge.direction0) * .5;
@@ -64,14 +76,14 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 		local up = right:Cross(edge.direction0).Unit;
 		local back = edge.direction0.Unit;
 
-		local cf1 = CFrame.new(
+		local cf1 = cframeNew(
 			p1.X, p1.y, p1.z,
 			-right.X, up.X, back.X,
 			-right.Y, up.Y, back.Y,
 			-right.Z, up.Z, back.Z
 		);
 
-		local cf2 = CFrame.new(
+		local cf2 = cframeNew(
 			p2.X, p2.y, p2.z,
 			right.X, up.X, -back.X,
 			right.Y, up.Y, -back.Y,
@@ -80,12 +92,12 @@ local drawQuad: (a: Vector3, b: Vector3, c: Vector3, d: Vector3, parent: Instanc
 
 		local wedge1 = part1 or wedge:Clone();
 
-		wedge1.Size = Vector3.new(0, h, w1);
+		wedge1.Size = vector3New(0, h, w1);
 		wedge1.CFrame = cf1;
 
 		local wedge2 = part2 or wedge:Clone();
 
-		wedge2.Size = Vector3.new(0, h, w2);
+		wedge2.Size = vector3New(0, h, w2);
 		wedge2.CFrame = cf2;
 
 		return wedge1, wedge2;
@@ -149,41 +161,39 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 		
 		local tl = widget.AbsolutePosition;
 		local br = tl + widget.AbsoluteSize;
-		local tr, bl = Vector2.new(br.X, tl.Y), Vector2.new(tl.X, br.Y);
+		local tr, bl = vector2New(br.X, tl.Y), vector2New(tl.X, br.Y);
 		
-		if properties.Material and properties.Material == Enum.Material.Neon then
-			tl -= Vector2.new(thickness, thickness);
-			br += Vector2.new(thickness, thickness);
-			tr += Vector2.new(thickness, -thickness);
-			bl += Vector2.new(-thickness, thickness);
-		end
+		tl -= vector2New(thickness, thickness);
+		br += vector2New(thickness, thickness);
+		tr += vector2New(thickness, -thickness);
+		bl += vector2New(-thickness, thickness);
 		
 		do
 			local rot = widget.AbsoluteRotation;
 			
 			if rot % 180 ~= 0 then
-				rot *= math.pi / 180;
+				rot *= RAD;
 				
-				local sin = math.sin(rot);
-				local cos = math.cos(rot);
+				local sin = mathSin(rot);
+				local cos = mathCos(rot);
 				local med = (tr + bl) / 2;
 				
-				tl = Vector2.new(
+				tl = vector2New(
 					cos * (tl.X - med.X) - sin * (tl.Y - med.Y),
 					sin * (tl.X - med.X) + cos * (tl.Y - med.Y)
 				) + med;
 				
-				br = Vector2.new(
+				br = vector2New(
 					cos * (br.X - med.X) - sin * (br.Y - med.Y),
 					sin * (br.X - med.X) + cos * (br.Y - med.Y)
 				) + med;
 				
-				tr = Vector2.new(
+				tr = vector2New(
 					cos * (tr.X - med.X) - sin * (tr.Y - med.Y),
 					sin * (tr.X - med.X) + cos * (tr.Y - med.Y)
 				) + med;
 				
-				bl = Vector2.new(
+				bl = vector2New(
 					cos * (bl.X - med.X) - sin * (bl.Y - med.Y),
 					sin * (bl.X - med.X) + cos * (bl.Y - med.Y)
 				) + med;
@@ -207,7 +217,7 @@ local function mainFunc(widget: GuiObject, id: string, zIndex: number, thickness
 	func();
 	
 	local cnn: RBXScriptConnection;
-	cnn = RunService.RenderStepped:Connect(function()
+	cnn = RunService.PreRender:Connect(function()
 		local output = func();
 		
 		if typeof(output) == "Instance" then
