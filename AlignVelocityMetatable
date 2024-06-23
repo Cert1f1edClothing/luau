@@ -58,6 +58,7 @@ local AlignVelocityMetatable: AlignVelocityMetatable; do
 			metatable.Position = v;
 	
 			local alignPosition = metatable.AlignPosition;
+
 			if alignPosition then
 				alignPosition.Position = v;
 			else
@@ -83,6 +84,7 @@ local AlignVelocityMetatable: AlignVelocityMetatable; do
 			end
 	
 			local alignOrientation = metatable.AlignOrientation;
+
 			if alignOrientation then
 				alignOrientation.CFrame = v;
 			else
